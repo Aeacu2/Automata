@@ -10,26 +10,10 @@ def thueMorse : DFAO (Fin 2) (Fin 2) (Fin 2) := {
   output := fun x => x
 }
 
-#eval thueMorse.eval [0]
-#eval thueMorse.eval [1]
-#eval thueMorse.eval [1, 0]
-#eval thueMorse.eval [1, 1]
-#eval thueMorse.eval [1, 0, 0]
-#eval thueMorse.eval [1, 0, 1]
-#eval thueMorse.eval [1, 1, 0]
-#eval thueMorse.eval [1, 1, 1]
-
 def thueMorse0 : DFA (Fin 2) (Fin 2) := thueMorse.toDFA 0
-#eval thueMorse0.eval [0]
-#eval thueMorse0.eval [1]
-#eval thueMorse0.eval [1, 0]
-#eval thueMorse0.eval [1, 1]
-#eval thueMorse0.eval [1, 0, 0]
-#eval thueMorse0.eval [1, 0, 1]
-#eval thueMorse0.eval [1, 1, 0]
-#eval thueMorse0.eval [1, 1, 1]
 
 def thueMorse1 : DFA (Fin 2) (Fin 2) := thueMorse.toDFA 1
+
 #eval thueMorse1.eval [0]
 #eval thueMorse1.eval [1]
 #eval thueMorse1.eval [1, 0]
@@ -107,6 +91,15 @@ def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=
 def toBase (b : ℕ) (n : ℕ): List ℕ :=
   (Nat.digits b n).reverse
 
+theorem toBase_lt_base (b: ℕ) (n: ℕ) (hb: b > 1) :
+  x ∈ (toBase b n) → x < b := by
+  intro h
+  simp only [toBase] at h
+  have h1: x ∈ Nat.digits b n := List.mem_reverse.mp h
+  apply Nat.digits_lt_base
+  exact hb
+  exact h1
+
 def ofBase (b : ℕ) (l : List ℕ) : ℕ :=
   l.foldl (fun x y => x * b + y) 0
 
@@ -116,7 +109,6 @@ theorem ofBase_toBase (b: ℕ) (n: ℕ) : ofBase b (toBase b n) = n := by
   nth_rewrite 2 [← h]
   rw [Nat.ofDigits_eq_foldr]
   rfl
-
 
 def addLeadingZeros (n: ℕ) (l: List ℕ): List ℕ :=
   (List.replicate n 0) ++ l
@@ -133,6 +125,9 @@ theorem ofBase_addLeadingZeros (b: ℕ)(n: ℕ) (l: List ℕ) :
   case succ n ih =>
     simp [addLeadingZeros, List.replicate, List.foldl, ih]
 
+#eval toBase 2 12
+#eval ofBase 2 [1, 1, 0, 0]
+
 def mapToBase (b: ℕ) (l: List ℕ) : List (List ℕ) :=
   l.map (toBase b)
 
@@ -140,7 +135,11 @@ def maxLen : (l: List (List α)) → ℕ
   | [] => 0
   | x :: xs => max x.length (maxLen xs)
 
-theorem cons_lt_maxLen (l: List α) (ls: List (List α)) :
+
+--def maxLen (l: List (List α)) : ℕ := l.foldl (fun x y => max x y.length) 0
+
+
+theorem len_lt_maxLen' (l: List α) (ls: List (List α)) :
   l.length ≤ maxLen (l :: ls) := by
   induction ls generalizing l with
   | nil => simp[maxLen]
@@ -156,14 +155,12 @@ theorem len_lt_maxLen (l: List α) (ls: List (List α)) :
   | cons head tail ih =>
     have h1: l = head ∨ l ∈ tail := List.eq_or_mem_of_mem_cons h
     rcases h1 with (rfl | h1)
-    . apply cons_lt_maxLen
+    . apply len_lt_maxLen'
     . simp[maxLen]
       right
       exact ih l h1
 
 def toBaseZip (b : ℕ) (hb: b > 1) (l: List ℕ) : (List (Fin l.length → Fin b)) :=
-
-
 
 
 

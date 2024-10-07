@@ -61,3 +61,4 @@ def project (dfa : DFA (Fin n → Fin k) state) (h: n ≥ 1) (m : Fin n) [BEq st
   start := [dfa.start]
   output := dfa.output
 }
+
