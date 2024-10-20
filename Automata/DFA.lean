@@ -22,8 +22,6 @@ def DFAO.toDFA (dfao : DFAO α state out) (o: out) [BEq out]: DFA α state := {
   output := fun s => (dfao.output s) == o
 }
 
-
-
 def DFAO.toDFA_evalFrom (dfao : DFAO α state out)
   (o: out) (s : List α) (q : state) [BEq out] :
     (dfao.toDFA o).evalFrom s q = ((dfao.evalFrom s q) == o) := by

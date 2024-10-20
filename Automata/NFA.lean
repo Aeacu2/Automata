@@ -41,24 +41,28 @@ theorem NFA.toDFA_eval (nfa : NFA α state) (s : List α) [BEq state]
 
 variable (β : Type)
 
+theorem finLt (m : Fin n) (b : ℕ) (h : n ≥ 1): b < m.val → b < n-1 := by omega
+
+theorem finPred (m : Fin n) (a : Fin n) (h : a > m): a.val - 1 < n - 1 := by omega
+
+def recover (h: n ≥ 1) (m : Fin n) (x: Fin k):
+  (Fin (n-1) → Fin k) → (Fin n → Fin k) :=
+    fun i => fun j => if h1: j.val < m.val then i ⟨j.val, finLt m j.val h h1⟩
+      else if h2: j.val > m.val then i ⟨j.val - 1, finPred m j h2⟩ else x
+
+def project (dfa : DFA (Fin n → Fin k) state) (h: n ≥ 1) (m : Fin n) [BEq state] :
+  NFA (Fin (n - 1) → Fin k) state := {
+  transition :=
+  fun a q => (List.map (fun (x : Fin k) => dfa.transition (recover h m x a) q)
+    (FinEnum.toList (Fin k)))
+  start := [dfa.start]
+  output := dfa.output
+}
+
+/-
 def project' (dfa : DFA (β × α) state) [BEq state] [FinEnum β] : NFA α state := {
   transition := fun a q => (List.map (fun (x : β) => dfa.transition (x, a) q) (FinEnum.toList β))
   start := [dfa.start]
   output := dfa.output
 }
-
-theorem finLt (m : Fin n) (b : ℕ) (h : n ≥ 1): b < m.val → b < n-1 := by omega
-
-theorem finPred (m : Fin n) (a : Fin n) (h : a > m): a.val - 1 < n - 1 := by omega
-
-def recover (h: n ≥ 1) (m : Fin n) (x: Fin k): (Fin (n-1) → Fin k) → (Fin n → Fin k) :=
-  fun i => fun j => if h1: j.val < m.val then i ⟨j.val, finLt m j.val h h1⟩
-    else if h2: j.val > m.val then i ⟨j.val - 1, finPred m j h2⟩ else x
-
-def project (dfa : DFA (Fin n → Fin k) state) (h: n ≥ 1) (m : Fin n) [BEq state] : NFA (Fin (n - 1) → Fin k) state := {
-  transition :=
-  fun a q => (List.map (fun (x : Fin k) => dfa.transition (recover h m x a) q) (FinEnum.toList (Fin k)))
-  start := [dfa.start]
-  output := dfa.output
-}
-
+-/
