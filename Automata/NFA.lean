@@ -31,7 +31,7 @@ theorem NFA.toDFA_evalFrom (nfa : NFA α state) (s : List α) (qs: List state) [
   (nfa.toDFA).evalFrom s qs = nfa.evalFrom s qs := by
   induction s generalizing qs
   case nil =>
-    simp only [NFA.evalFrom, DFAO.evalFrom, NFA.toDFA]
+    simp only [NFA.evalFrom, DFAO.evalFrom, DFAO.transFrom, NFA.toDFA]
   case cons x xs ih =>
     simp only [NFA.evalFrom, DFAO.evalFrom, NFA.toDFA_transition]
     exact ih (nfa.stepList x qs)

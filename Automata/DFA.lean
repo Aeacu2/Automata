@@ -5,10 +5,13 @@ structure DFAO (α state out: Type):=
   (start : state)
   (output : state → out)
 
-def DFAO.evalFrom (dfao : DFAO α state out) (s : List α) (q : state) : out :=
+def DFAO.transFrom (dfao : DFAO α state out) (s : List α) (q : state) : state :=
   match s with
-    | [] => dfao.output q
-    | a::as => DFAO.evalFrom dfao as (dfao.transition a q)
+    | [] => q
+    | a::as => DFAO.transFrom dfao as (dfao.transition a q)
+
+def DFAO.evalFrom (dfao : DFAO α state out) (s : List α) (q : state) : out :=
+  dfao.output (DFAO.transFrom dfao s q)
 
 def DFAO.eval (dfao : DFAO α state out) (s : List α) : out :=
   DFAO.evalFrom dfao s dfao.start
@@ -54,45 +57,64 @@ def DFA.product_u  (dfa1 : DFA α state1) (dfa2 : DFA α state2) : DFA (α) (sta
   output := fun (q1, q2) => dfa1.output q1 || dfa2.output q2
 }
 
+theorem DFA.negate_output (dfa : DFA α state) (q : state) :
+  (dfa.negate).output q = ! dfa.output q := by rfl
+
 theorem DFA.negate_transition (dfa : DFA α state) :
   (dfa.negate).transition = dfa.transition := by rfl
 
-theorem DFA.negate_evalFrom (dfa : DFA α state) (s : List α) (q : state) :
-  (dfa.negate).evalFrom s q = ! dfa.evalFrom s q := by
+theorem DFA.negate_transFrom (dfa : DFA α state) (s : List α) (q : state) :
+  (dfa.negate).transFrom s q = dfa.transFrom s q := by
   induction s generalizing q
   case nil => rfl
   case cons a s ih =>
-    rw [DFAO.evalFrom, DFAO.evalFrom, DFA.negate_transition, ih]
+    rw [DFAO.transFrom, DFAO.transFrom, DFA.negate_transition, ih]
+
+theorem DFA.negate_evalFrom (dfa : DFA α state) (s : List α) (q : state) :
+  (dfa.negate).evalFrom s q = ! dfa.evalFrom s q := by
+  simp[DFAO.evalFrom, DFA.negate_transFrom, DFA.negate_output]
 
 theorem DFA.negate_eval (dfa : DFA α state) (s : List α) :
   (dfa.negate).eval s = ! dfa.eval s := by
   exact DFA.negate_evalFrom dfa s dfa.start
 
+theorem DFA.product_i_output (dfa1 : DFA α state1) (dfa2 : DFA α state2) (q1 : state1) (q2 : state2) :
+  (dfa1.product_i dfa2).output (q1, q2) = (dfa1.output q1 && dfa2.output q2) := by rfl
+
 theorem DFA.product_i_transition (dfa1 : DFA α state1) (dfa2 : DFA α state2) :
   (dfa1.product_i dfa2).transition = fun a q => ⟨dfa1.transition a q.1, dfa2.transition a q.2⟩ := by rfl
 
-theorem DFA.product_i_evalFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) (q1 : state1) (q2 : state2) :
-  (dfa1.product_i dfa2).evalFrom s (q1, q2) = (dfa1.evalFrom s q1 && dfa2.evalFrom s q2) := by
+theorem DFA.product_i_transFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) (q1 : state1) (q2 : state2) :
+  (dfa1.product_i dfa2).transFrom s (q1, q2) = (dfa1.transFrom s q1, dfa2.transFrom s q2) := by
   induction s generalizing q1 q2
   case nil => rfl
   case cons a s ih =>
-    simp [DFAO.evalFrom, DFA.product_i_transition, ih]
-    -- rw [DFA.evalFrom, DFA.product_i_transition, ih]
-    -- rw [List.map_cons, List.map_cons, DFA.evalFrom, DFA.evalFrom]
+    simp [DFAO.transFrom, DFA.product_i_transition, ih]
+
+theorem DFA.product_i_evalFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) (q1 : state1) (q2 : state2) :
+  (dfa1.product_i dfa2).evalFrom s (q1, q2) = (dfa1.evalFrom s q1 && dfa2.evalFrom s q2) := by
+  simp[DFAO.evalFrom, DFA.product_i_transFrom, DFA.product_i_output]
 
 theorem DFA.product_i_eval (dfa1 : DFA α state1) (dfa2 : DFA α state2)
   (s : List α) : (dfa1.product_i dfa2).eval s = (dfa1.eval s && dfa2.eval s) := by
   exact DFA.product_i_evalFrom dfa1 dfa2 s dfa1.start dfa2.start
 
+theorem DFA.product_u_output (dfa1 : DFA α state1) (dfa2 : DFA α state2) (q1 : state1) (q2 : state2) :
+  (dfa1.product_u dfa2).output (q1, q2) = (dfa1.output q1 || dfa2.output q2) := by rfl
+
 theorem DFA.product_u_transition (dfa1 : DFA α state1) (dfa2 : DFA α state2) :
   (dfa1.product_u dfa2).transition = fun a q => ⟨dfa1.transition a q.1, dfa2.transition a q.2⟩ := by rfl
 
-theorem DFA.product_u_evalFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) (q1 : state1) (q2 : state2) :
-  (dfa1.product_u dfa2).evalFrom s (q1, q2) = (dfa1.evalFrom s q1 || dfa2.evalFrom s q2) := by
+theorem DFA.product_u_transFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) (q1 : state1) (q2 : state2) :
+  (dfa1.product_u dfa2).transFrom s (q1, q2) = (dfa1.transFrom s q1, dfa2.transFrom s q2) := by
   induction s generalizing q1 q2
   case nil => rfl
   case cons a s ih =>
-    simp [DFAO.evalFrom, DFA.product_u_transition, ih]
+    simp [DFAO.transFrom, DFA.product_u_transition, ih]
+
+theorem DFA.product_u_evalFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) (q1 : state1) (q2 : state2) :
+  (dfa1.product_u dfa2).evalFrom s (q1, q2) = (dfa1.evalFrom s q1 || dfa2.evalFrom s q2) := by
+  simp[DFAO.evalFrom, DFA.product_u_transFrom, DFA.product_u_output]
 
 theorem DFA.product_u_eval (dfa1 : DFA α state1) (dfa2 : DFA α state2)
   (s : List α) : (dfa1.product_u dfa2).eval s = (dfa1.eval s || dfa2.eval s) := by
