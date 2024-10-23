@@ -3,15 +3,24 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.Nat.Digits
 
 /-
+Major function: inputToBase
+
 Idea: Given a list of natural numbers 'l',
 
 Step 1: Convert each number to base b, get 'ls' : List (List ℕ)
 
+Functions involved: toBase, mapToBase
+Theorems involved: toBase_lt_base, mapToBase_lt_base, mapToBase_length
+
 Step 2: Stretch each list to uniform length by adding leading zeros, get 'lss' : List (List ℕ)
 
-Step 2.5? : Convert 'lss' to List (List (Fin b)) using 'toBase_lt_base'
+Functions involved: addLeadingZeros, stretchLen
+Theorems involved: addLeadingZeros_elem, addLeadingZerosLength, stretchLen_length, stretchLen_uniform
 
-Step 3: Zip the lists together to get the input to automatas: List (Fin (l.length) → Fin b)
+Step 3: Zip the lists together, giving less than base proofs to turn Nats into Fin bs, to get the input to automatas: List (Fin (l.length) → Fin b)
+
+Functions involved: zipToAlphabetFin
+Theorems involved: zipToAlphabetFin_length
 -/
 
 --def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=
@@ -52,8 +61,6 @@ theorem addLeadingZeros_elem (n: ℕ) (l: List ℕ) :
     exact Finset.mem_zero.mp this
   . right
     exact h
-
-#check List.replicate_subset_singleton 3 0
 
 theorem addLeadingZerosLength (n: ℕ) (l: List ℕ) :
   (addLeadingZeros n l).length = n + l.length :=
@@ -226,7 +233,8 @@ def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) : List (Fin l.length → Fin
     apply stretchLen_uniform
     assumption)
 
-/-
+
+/- USELESS CODES
 def zipToAlphabet (n : ℕ) (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l) (hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → ℕ) :=
   match n with
   | 0 => []

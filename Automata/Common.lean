@@ -166,49 +166,91 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
     (stretchLen (mapToBase b [m, n]))[1] := by
       simp only [stretchLen, List.map, List.getElem_cons_zero, List.getElem_cons_succ, h]
 
-    have inputEqZip : zipToAlphabetFin (maxLen (mapToBase b [m, n])) 2 (stretchLen (mapToBase b [m, n])) (by
-      apply stretchLen_of_mapToBase_lt_base
-      exact hb
-    ) (by simp only [stretchLenLen, mapLen]) (by
-      intro x hx
-      simp[List.mem_iff_get] at hx
-      rcases hx with ⟨s, hs, rfl⟩
-      have: s.val = 0 ∨ s.val = 1 := by
-        have:= s.isLt
-        omega
-      rcases this with hs | hs
-      . apply stretchLen_uniform
-        simp[hs]
-        apply List.getElem_mem
-      . apply stretchLen_uniform
-        simp[hs]
-        apply List.getElem_mem
-    ) = inputToBase b hb [m, n] := by
-      simp[inputToBase]
+    have indexValid0 : 0 < (stretchLen (mapToBase b [m, n])).length := by
+      simp [stretchLenLen]
 
-    have zipMatch: ∀ f ∈ zipToAlphabetFin (maxLen (mapToBase b [m, n])) 2 (stretchLen (mapToBase b [m, n])) (by
-      apply stretchLen_of_mapToBase_lt_base
-      exact hb
-    ) (by simp only [stretchLenLen, mapLen]) (by
-      intro x hx
-      simp[List.mem_iff_get] at hx
-      rcases hx with ⟨s, hs, rfl⟩
-      have: s.val = 0 ∨ s.val = 1 := by
-        have:= s.isLt
-        omega
-      rcases this with hs | hs
-      . apply stretchLen_uniform
-        simp[hs]
-        apply List.getElem_mem
-      . apply stretchLen_uniform
-        simp[hs]
-        apply List.getElem_mem
-    ), (f 0).val = f 1 := by
+    have indexValid1 : 1 < (stretchLen (mapToBase b [m, n])).length := by simp [stretchLenLen]
+
+    have lenStretchLen0 : (stretchLen (mapToBase b [m, n]))[0].length = maxLen (mapToBase b [m, n]) := by
+      apply stretchLen_uniform
+      exact List.getElem_mem (stretchLen (mapToBase b [m, n])) 0 indexValid0
+
+    have lenStretchLen1 : (stretchLen (mapToBase b [m, n]))[1].length = maxLen (mapToBase b [m, n]) := by
+      apply stretchLen_uniform
+      exact List.getElem_mem (stretchLen (mapToBase b [m, n])) 1 indexValid1
+
+    have stretchLenIndexEq (i: ℕ)(hi: i < (maxLen (mapToBase b [m, n]))): (stretchLen (mapToBase b [m, n]))[0][i]'(by
+      simp[lenStretchLen0]
+      exact hi
+    ) = (stretchLen (mapToBase b [m, n]))[1][i]'(by
+      simp[lenStretchLen1]
+      exact hi
+    ) := by
+      simp[stretchLenEq]
+
+    have zipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
+      (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = 2)
+      (hls: ∀ ls ∈ lss, ls.length = lsLength) (hIndexEq: ∀i, ∀ (hi : i < lsLength), lss[0][i]'(by
+        have: lss[0] ∈ lss := by
+          apply List.getElem_mem
+        rw[hls lss[0] this]
+        exact hi
+      ) = lss[1][i]'(by
+        have: lss[1] ∈ lss := by
+          apply List.getElem_mem
+        rw[hls lss[1] this]
+        exact hi
+      )): ∀ f ∈ (zipToAlphabetFin lsLength 2 lss hlb hlss hls), (f 0).val = f 1:= by
       intro f hf
-      sorry
-    rw[← inputEqZip] at hf
-    apply zipMatch f hf
+      induction lsLength generalizing lss
+      case zero =>
+        simp [List.length_eq_zero, zipToAlphabetFin] at hf
+      case succ lsLength ih =>
 
+
+      sorry
+
+    generalize zipDef : zipToAlphabetFin (maxLen (mapToBase b [m, n])) 2 (stretchLen (mapToBase b [m, n])) (by
+      apply stretchLen_of_mapToBase_lt_base
+      exact hb
+    ) (by simp only [stretchLenLen, mapLen]) (by
+      intro x hx
+      simp[List.mem_iff_get] at hx
+      rcases hx with ⟨s, hs, rfl⟩
+      have: s.val = 0 ∨ s.val = 1 := by
+        have:= s.isLt
+        omega
+      rcases this with hs | hs <;>
+      (apply stretchLen_uniform; simp[hs]; apply List.getElem_mem)
+    ) = zip
+
+    have zipEqInput : zip = inputToBase b hb [m, n] := by
+      simp[inputToBase, zipDef]
+
+    
+
+
+/-
+    have zipMatch: ∀ f ∈ zip, (f 0).val = f 1 := by
+      intro f hf
+      rw[← zipDef, zipToAlphabetFin.eq_def] at hf
+      generalize lenDef : (maxLen (mapToBase b [m, n])) = len
+      induction len
+      case zero =>
+        split at hf
+        . simp at hf
+        . rename_i m' hls' hlss' heq
+          simp[lenDef] at hlss'
+
+      case succ m' ih =>
+-/
+
+
+
+
+
+
+  sorry
 
 
 

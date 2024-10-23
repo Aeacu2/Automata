@@ -41,10 +41,14 @@ theorem NFA.toDFA_eval (nfa : NFA α state) (s : List α) [BEq state]
 
 variable (β : Type)
 
+
+-- Auxilliary theorems for recover
 theorem finLt (m : Fin n) (b : ℕ) (h : n ≥ 1): b < m.val → b < n-1 := by omega
 
 theorem finPred (m : Fin n) (a : Fin n) (h : a > m): a.val - 1 < n - 1 := by omega
 
+
+-- Auxilliary function for project
 def recover (h: n ≥ 1) (m : Fin n) (x: Fin k):
   (Fin (n-1) → Fin k) → (Fin n → Fin k) :=
     fun i => fun j => if h1: j.val < m.val then i ⟨j.val, finLt m j.val h h1⟩
