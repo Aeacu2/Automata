@@ -226,7 +226,6 @@ def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) : List (Fin l.length → Fin
     apply stretchLen_uniform
     assumption)
 
-
 /-
 def zipToAlphabet (n : ℕ) (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l) (hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → ℕ) :=
   match n with
