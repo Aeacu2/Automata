@@ -63,7 +63,7 @@ def project (dfa : DFA (Fin n → Fin k) state) (h: n ≥ 1) (m : Fin n) [BEq st
   output := dfa.output
 }
 
-/-
+/- USELESS CODE
 def project' (dfa : DFA (β × α) state) [BEq state] [FinEnum β] : NFA α state := {
   transition := fun a q => (List.map (fun (x : β) => dfa.transition (x, a) q) (FinEnum.toList β))
   start := [dfa.start]

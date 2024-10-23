@@ -227,7 +227,9 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
     have zipEqInput : zip = inputToBase b hb [m, n] := by
       simp[inputToBase, zipDef]
 
-    
+    sorry
+
+
 
 
 /-
@@ -250,14 +252,7 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
 
 
 
-  sorry
-
-
-
-
-
-
-theorem eqBase_iff_equal (b : ℕ) (m n : ℕ) (hb: b > 1):
+theorem eqBase_if_equal (b : ℕ) (m n : ℕ) (hb: b > 1):
   m = n → (eqBase b).eval (inputToBase b hb [m, n]) := by
   sorry
 
