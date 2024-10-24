@@ -49,6 +49,9 @@ def eqBase' (k: ℕ) (a b n : ℕ) (ha: a < n) (hb: b < n): DFA (Fin n → Fin k
 2. input natural numbers are equal iff f 0 = f 1 for all f ∈ input
 
 -/
+
+--Start of Step 1
+--Right to Left
 theorem eqBase_if_equal_aux (b : ℕ) (input: List (Fin 2 → Fin b)):
   (∀ f ∈ input, (f 0).val = f 1) → (eqBase b).evalFrom input 0 := by
   intro h
@@ -67,12 +70,14 @@ theorem eqBase_if_equal_aux (b : ℕ) (input: List (Fin 2 → Fin b)):
     apply h
     simp only [List.mem_cons, or_true, hf']
 
+
+-- Left to right, much harder
 theorem eqBase_trans_zero (k : ℕ) (state : Fin 2) (f : Fin 2 → Fin k) :
   (eqBase k).transition f state = 0 ↔ state = 0 ∧ (f 0).val = f 1 := by
   simp only [eqBase, Fin.isValue, beq_iff_eq]
   split <;> simp
 
-/-
+/- A Longer proof, useless
 example (k : ℕ) (state : Fin 2) (f : Fin 2 → Fin k) :
   (eqBase k).transition f state = 0 ↔ state = 0 ∧ (f 0).val == f 1 := by
   constructor
@@ -94,6 +99,7 @@ example (k : ℕ) (state : Fin 2) (f : Fin 2 → Fin k) :
   simp only [Fin.isValue, beq_iff_eq] at h2
   simp only [eqBase, Fin.isValue, beq_iff_eq, ↓reduceIte, h1, h2]
 -/
+
 
 theorem eqBase_transFrom_zero (k : ℕ) (state: Fin 2) (l : List (Fin 2 → Fin k)) :
   (eqBase k).transFrom l state = 0 ↔ state = 0 ∧ ∀ f ∈ l, (f 0).val = f 1 := by
@@ -139,25 +145,77 @@ theorem eqInput_if_eqBase (b : ℕ) (input: List (Fin 2 → Fin b)):
   simp[DFAO.evalFrom, DFAO.output, eqBase] at h
   apply h
 
+-- End of Left to right, final step 1 statement:
 theorem eqBase_iff_eqInput (b : ℕ) (input: List (Fin 2 → Fin b)):
   (eqBase b).eval input ↔ (∀ f ∈ input, (f 0).val = f 1) := by
   constructor
   . apply eqInput_if_eqBase b input
   . apply eqBase_if_equal_aux b input
 
+-- Start of step 2, left to right
+theorem tailIndex (l: List α) (hl: l.length > 0) :
+  ∀ i,∀ (hi: i + 1 < l.length), l.tail[i]'(by
+    simp only [List.length_tail]; omega
+  ) = l[i + 1] := by
+    induction l
+    case nil => simp only [List.length_nil, gt_iff_lt, lt_self_iff_false] at hl
+    case cons x xs _ =>
+      simp only [List.length_cons, add_lt_add_iff_right, List.tail, List.getElem_cons_succ,
+        implies_true]
+
+--An Auxillary theorem for left to right
+theorem zipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
+      (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = 2)
+      (hls: ∀ ls ∈ lss, ls.length = lsLength) (hIndexEq: ∀i, ∀ (hi : i < lsLength), lss[0][i]'(by
+        have: lss[0] ∈ lss := by
+          apply List.getElem_mem
+        rw[hls lss[0] this]
+        exact hi
+      ) = lss[1][i]'(by
+        have: lss[1] ∈ lss := by
+          apply List.getElem_mem
+        rw[hls lss[1] this]
+        exact hi
+      )): ∀ f ∈ (zipToAlphabetFin lsLength 2 lss hlb hlss hls), (f 0).val = f 1:= by
+      intro f hf
+      induction lsLength generalizing lss
+      case zero =>
+        simp [List.length_eq_zero, zipToAlphabetFin] at hf
+      case succ lsLength ih =>
+        simp[zipToAlphabetFin] at hf
+        rcases hf with hf | hf
+        . specialize hIndexEq 0 (by norm_num)
+          simp[hf, hIndexEq]
+        . apply ih (List.map (fun ls ↦ ls.tail) lss)
+          . intro i hi
+            simp only [List.getElem_map]
+            rw[tailIndex, tailIndex]
+            apply hIndexEq
+            simp only [add_lt_add_iff_right]
+            exact hi
+            . have : lss[1] ∈ lss := by apply List.getElem_mem lss 1
+              specialize hls lss[1]
+              rw[hls this]
+              simp
+            . have : lss[0] ∈ lss := by apply List.getElem_mem lss 0
+              specialize hls lss[0]
+              rw[hls this]
+              simp
+          . exact hf
+
 theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
   m = n →  ∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩ := by
-    intro h f hf
+    intro h
     --rw[h] at *
-    have digitsEq : toBase b m = toBase b n := by rw[h]
-    have lenEq : (toBase b m).length = (toBase b n).length := by rw[digitsEq]
-    have mapTo : mapToBase b [m, n] = [toBase b m, toBase b n] := by rfl
+    -- have digitsEq : toBase b m = toBase b n := by rw[h]
+    -- have lenEq : (toBase b m).length = (toBase b n).length := by rw[digitsEq]
+    -- have mapTo : mapToBase b [m, n] = [toBase b m, toBase b n] := by rfl
     have mapLen : (mapToBase b [m, n]).length = 2 :=
     mapToBase_length b [m, n]
-    have lenEqMap : ((mapToBase b [m, n])[0]).length = ((mapToBase b [m, n])[1]).length := by
-      simp only [mapTo, List.getElem_cons_zero, lenEq, List.getElem_cons_succ]
-    have maxLenEq : maxLen (mapToBase b [m, n]) = (toBase b m).length := by
-      simp only [maxLen, h, zero_le, max_eq_left, max_self]
+    -- have lenEqMap : ((mapToBase b [m, n])[0]).length = ((mapToBase b [m, n])[1]).length := by
+    --   simp only [mapTo, List.getElem_cons_zero, lenEq, List.getElem_cons_succ]
+    -- have maxLenEq : maxLen (mapToBase b [m, n]) = (toBase b m).length := by
+    --   simp only [maxLen, h, zero_le, max_eq_left, max_self]
     have stretchLenLen_aux : (stretchLen (mapToBase b [m, n])).length = (mapToBase b [m, n]).length :=
       stretchLen_length (mapToBase b [m, n])
     have stretchLenLen : (stretchLen (mapToBase b [m, n])).length = 2 := by
@@ -187,74 +245,39 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
       exact hi
     ) := by
       simp[stretchLenEq]
+    intro f hf
+    rw[inputToBase] at hf
+    apply zipOfIndexEq (maxLen (mapToBase b [m, n])) (stretchLen (mapToBase b [m, n]))
+    . apply stretchLenIndexEq
+    . exact hf
 
-    have zipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
-      (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = 2)
-      (hls: ∀ ls ∈ lss, ls.length = lsLength) (hIndexEq: ∀i, ∀ (hi : i < lsLength), lss[0][i]'(by
-        have: lss[0] ∈ lss := by
-          apply List.getElem_mem
-        rw[hls lss[0] this]
-        exact hi
-      ) = lss[1][i]'(by
-        have: lss[1] ∈ lss := by
-          apply List.getElem_mem
-        rw[hls lss[1] this]
-        exact hi
-      )): ∀ f ∈ (zipToAlphabetFin lsLength 2 lss hlb hlss hls), (f 0).val = f 1:= by
-      intro f hf
-      induction lsLength generalizing lss
-      case zero =>
-        simp [List.length_eq_zero, zipToAlphabetFin] at hf
-      case succ lsLength ih =>
+      --WOW!!!!
 
-
-      sorry
-
-    generalize zipDef : zipToAlphabetFin (maxLen (mapToBase b [m, n])) 2 (stretchLen (mapToBase b [m, n])) (by
-      apply stretchLen_of_mapToBase_lt_base
-      exact hb
-    ) (by simp only [stretchLenLen, mapLen]) (by
-      intro x hx
-      simp[List.mem_iff_get] at hx
-      rcases hx with ⟨s, hs, rfl⟩
-      have: s.val = 0 ∨ s.val = 1 := by
-        have:= s.isLt
-        omega
-      rcases this with hs | hs <;>
-      (apply stretchLen_uniform; simp[hs]; apply List.getElem_mem)
-    ) = zip
-
-    have zipEqInput : zip = inputToBase b hb [m, n] := by
-      simp[inputToBase, zipDef]
-
-    sorry
+--Right to left
+theorem equal_if_eqInput (m n b : ℕ) (hb : b > 1) :
+  (∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩) → m = n := by
 
 
 
-
-/-
-    have zipMatch: ∀ f ∈ zip, (f 0).val = f 1 := by
-      intro f hf
-      rw[← zipDef, zipToAlphabetFin.eq_def] at hf
-      generalize lenDef : (maxLen (mapToBase b [m, n])) = len
-      induction len
-      case zero =>
-        split at hf
-        . simp at hf
-        . rename_i m' hls' hlss' heq
-          simp[lenDef] at hlss'
-
-      case succ m' ih =>
--/
-
-
-
-
-
-
-theorem eqBase_if_equal (b : ℕ) (m n : ℕ) (hb: b > 1):
-  m = n → (eqBase b).eval (inputToBase b hb [m, n]) := by
   sorry
+
+--statement of Step 2
+theorem eqInput_iff_equal (m n b : ℕ) (hb : b > 1):
+  (∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩) ↔ m = n := by
+    constructor
+    . apply equal_if_eqInput
+    . apply eqInput_if_equal
+
+--Final theorem for the correctness of eqBase b
+theorem eqBase_iff_equal (m n b : ℕ) (hb: b > 1):
+  m = n ↔ (eqBase b).eval (inputToBase b hb [m, n]) := by
+  constructor
+  . intro h
+    apply (eqBase_iff_eqInput b (inputToBase b hb [m, n])).mpr
+    apply (eqInput_iff_equal m n b hb).mpr h
+  . intro h
+    apply (eqInput_iff_equal m n b hb).mp
+    apply (eqBase_iff_eqInput b (inputToBase b hb [m, n])).mp h
 
 def leBase (k: ℕ)  : DFA (Fin 2 → Fin k) (Fin 2) := {
   transition := fun f s => match s with

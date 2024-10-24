@@ -20,11 +20,8 @@ Theorems involved: addLeadingZeros_elem, addLeadingZerosLength, stretchLen_lengt
 Step 3: Zip the lists together, giving less than base proofs to turn Nats into Fin bs, to get the input to automatas: List (Fin (l.length) → Fin b)
 
 Functions involved: zipToAlphabetFin
-Theorems involved: zipToAlphabetFin_length
+Theorems involved: zipTailHlb, zipTailHlss, zipTailHls, zipToAlphabetFin_length
 -/
-
---def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=
---  (Nat.digits b n).attach.map (fun x => ⟨x.1, Nat.digits_lt_base h x.2⟩)
 
 def toBase (b : ℕ) (n : ℕ): List ℕ :=
   (Nat.digits b n).reverse
@@ -142,46 +139,21 @@ theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (l: List ℕ) (hb: b > 1) :
     exact left
   . exact h
 
-theorem tailLen (l: List α) : l.tail.length = l.length - 1 := by
-  rcases l
-  . simp
-  . simp
+theorem zipTailHlb (lss: List (List ℕ))
+(hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b): ∀ x ∈ List.map (fun ls ↦ ls.tail) lss, ∀ y ∈ x, y < b := by
+  intro x hx
+  simp only [List.mem_map] at hx
+  rcases hx with ⟨s, hs, rfl⟩
+  intro y hy
+  specialize hlb s hs
+  apply hlb
+  exact List.mem_of_mem_tail hy
 
-def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
-(hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
-(hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → Fin b) :=
-  match n with
-  | 0 => []
-  | m+1 =>
-     (fun i =>
-       have : 0 < lss[i].length := by
-         rw[hls]
-         omega
-         refine List.mem_iff_get.mpr ?_
-         subst hlss
-         use i
-         rfl
+theorem zipTailHlss (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l)
+ : (List.map (fun ls ↦ ls.tail) lss).length = l := by
+  simp only [List.length_map, hlss]
 
-       ⟨lss[i][0], (by
-          apply hlb lss[i]
-          . apply List.mem_iff_getElem.mpr
-            simp only [Fin.getElem_fin, hlss]
-            use i
-            use i.isLt
-          . apply List.mem_iff_getElem.mpr
-            use 0
-            use this)⟩
-        ) :: (zipToAlphabetFin m l (lss.map (fun ls => ls.tail))
-        (by
-          intro x hx
-          simp only [List.mem_map] at hx
-          rcases hx with ⟨s, hs, rfl⟩
-          intro y hy
-          specialize hlb s hs
-          apply hlb
-          exact List.mem_of_mem_tail hy
-        )
-        (by simp only [List.length_map, hlss]) (fun
+theorem zipTailHls (lss: List (List ℕ)) (hls : ∀ ls ∈ lss, ls.length = m + 1) : ∀ ls ∈ List.map (fun ls ↦ ls.tail) lss, ls.length = m := fun
           | .nil => by
             simp only [List.mem_map, List.length_nil, forall_exists_index, and_imp]
             intro x hx
@@ -202,13 +174,43 @@ def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
               have: x.length - 1 = m := by
                 omega
               rw[← this]
-              apply tailLen x
+              apply List.length_tail x
             rw[← this, h]
-            have hxtail := tailLen x.tail
+            have hxtail := List.length_tail x.tail
             rw[h, List.tail] at hxtail
             have: (head :: tail).length > 0 := by simp
             omega
-            ))
+
+def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
+(hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
+(hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → Fin b) :=
+  match n with
+  | 0 => []
+  | m+1 =>
+     (fun i =>
+      -- prove index valid
+       have : 0 < lss[i].length := by
+         rw[hls]
+         omega
+         refine List.mem_iff_get.mpr ?_
+         subst hlss
+         use i
+         rfl
+
+       ⟨lss[i][0], (by
+       -- giving Fin b proof
+          apply hlb lss[i]
+          . apply List.mem_iff_getElem.mpr
+            simp only [Fin.getElem_fin, hlss]
+            use i
+            use i.isLt
+          . apply List.mem_iff_getElem.mpr
+            use 0
+            use this)⟩
+        ) :: (zipToAlphabetFin m l (lss.map (fun ls => ls.tail))
+        (by apply zipTailHlb; exact hlb)
+        (by apply zipTailHlss; exact hlss)
+        (by apply zipTailHls; exact hls))
 
 theorem zipToAlphabetFin_length (n : ℕ) (l : ℕ) (lss: List (List ℕ))
 (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
@@ -235,6 +237,9 @@ def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) : List (Fin l.length → Fin
 
 
 /- USELESS CODES
+def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=
+  (Nat.digits b n).attach.map (fun x => ⟨x.1, Nat.digits_lt_base h x.2⟩)
+
 def zipToAlphabet (n : ℕ) (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l) (hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → ℕ) :=
   match n with
   | 0 => []
