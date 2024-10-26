@@ -203,6 +203,9 @@ theorem zipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
               simp
           . exact hf
 
+theorem mapLen : (mapToBase b [m, n]).length = 2 :=
+    mapToBase_length b [m, n]
+
 theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
   m = n →  ∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩ := by
     intro h
@@ -210,8 +213,6 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
     -- have digitsEq : toBase b m = toBase b n := by rw[h]
     -- have lenEq : (toBase b m).length = (toBase b n).length := by rw[digitsEq]
     -- have mapTo : mapToBase b [m, n] = [toBase b m, toBase b n] := by rfl
-    have mapLen : (mapToBase b [m, n]).length = 2 :=
-    mapToBase_length b [m, n]
     -- have lenEqMap : ((mapToBase b [m, n])[0]).length = ((mapToBase b [m, n])[1]).length := by
     --   simp only [mapTo, List.getElem_cons_zero, lenEq, List.getElem_cons_succ]
     -- have maxLenEq : maxLen (mapToBase b [m, n]) = (toBase b m).length := by
@@ -245,6 +246,7 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
       exact hi
     ) := by
       simp[stretchLenEq]
+
     intro f hf
     rw[inputToBase] at hf
     apply zipOfIndexEq (maxLen (mapToBase b [m, n])) (stretchLen (mapToBase b [m, n]))
@@ -254,6 +256,99 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
       --WOW!!!!
 
 --Right to left
+theorem equal_if_toBaseEq (m n b : ℕ):
+  toBase b m = toBase b n → m = n := by
+  intro h
+  rw[← ofBase_toBase b n, ← ofBase_toBase b m]
+  congr
+
+theorem equal_if_mapToBaseEq (m n b : ℕ):
+  (mapToBase b [m, n])[0]'(by simp[mapLen]) = (mapToBase b [m, n])[1]'(by simp[mapLen]) → m = n := by
+  intro h
+  simp[mapToBase] at h
+  apply equal_if_toBaseEq
+  exact h
+
+theorem eq_if_addLeadingZerosEq (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k, l])  (hk0 :0 < k.length) (hk: k[0] ≠ 0) (hl0 :0 < l.length) (hl: l[0] ≠ 0) :
+  addLeadingZeros (n - k.length) k = addLeadingZeros (n - l.length) l → k = l := by
+  intro h
+  have kLen: n ≥ k.length := by
+    simp[maxLen] at hn
+    exact hn.1
+  have lLen: n ≥ l.length := by
+    simp[maxLen] at hn
+    exact hn.2
+
+  have hL: n - k.length = n - l.length := by
+    by_contra hL
+    have hLen: n - k.length < n - l.length ∨ n - k.length > n - l.length := by
+      exact Nat.lt_or_gt_of_ne hL
+    have kAddLen: (addLeadingZeros (n - k.length) k).length = n := by simp only [addLeadingZerosLength]; omega
+    have lAddLen: (addLeadingZeros (n - l.length) l).length = n :=  by simp only [addLeadingZerosLength]; omega
+    rcases hLen with (hLen | hLen)
+    . have addL : (addLeadingZeros (n - l.length) l)[n-k.length] = 0 := by
+
+        have: (addLeadingZeros (n - l.length) l)[n-k.length] = (List.replicate (n - l.length) 0)[n - k.length]'(by aesop) := by
+          simp only [addLeadingZeros]
+          rw[List.getElem_append_left]
+
+        rw[this]
+
+        have: (List.replicate (n - l.length) 0)[n - k.length]'(by  aesop) = 0 := by
+          aesop
+
+        exact this
+
+      have addK : (addLeadingZeros (n - k.length) k)[n-k.length] ≠  0 := by
+        simp[addLeadingZeros]
+        rw[List.getElem_append_right]
+        simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
+        exact hk
+        . aesop
+        . aesop
+      aesop
+
+    . have addK : (addLeadingZeros (n - k.length) k)[n-l.length] = 0 := by
+        have: (addLeadingZeros (n - k.length) k)[n-l.length] = (List.replicate (n - k.length) 0)[n - l.length]'(by aesop) := by
+          simp only [addLeadingZeros]
+          rw[List.getElem_append_left]
+
+        rw[this]
+
+        have: (List.replicate (n - k.length) 0)[n - l.length]'(by  aesop) = 0 := by
+          aesop
+
+        exact this
+
+      have addL : (addLeadingZeros (n - l.length) l)[n-l.length] ≠  0 := by
+        simp[addLeadingZeros]
+        rw[List.getElem_append_right]
+        simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
+        exact hl
+        . aesop
+        . aesop
+
+      aesop
+  rw[← hL] at h
+  simp[addLeadingZeros] at h
+  exact h
+
+
+theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
+  (stretchLen (mapToBase b [m, n]))[0]'(by simp[stretchLen_length, mapToBase_length]) = (stretchLen (mapToBase b [m, n]))[1]'(by simp[stretchLen_length, mapToBase_length]) → m = n := by
+  intro h
+  apply equal_if_mapToBaseEq
+  apply eq_if_addLeadingZerosEq (maxLen (mapToBase b [m, n]))
+  . aesop
+  . simp[mapToBase]
+    refine Nat.ne_zero_iff_zero_lt.mpr ?_
+    apply toBase_lead_nonzero
+    exact hb
+
+
+
+
+
 theorem equal_if_eqInput (m n b : ℕ) (hb : b > 1) :
   (∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩) → m = n := by
 
@@ -278,6 +373,8 @@ theorem eqBase_iff_equal (m n b : ℕ) (hb: b > 1):
   . intro h
     apply (eqInput_iff_equal m n b hb).mp
     apply (eqBase_iff_eqInput b (inputToBase b hb [m, n])).mp h
+
+-- End of correcteness proof
 
 def leBase (k: ℕ)  : DFA (Fin 2 → Fin k) (Fin 2) := {
   transition := fun f s => match s with
