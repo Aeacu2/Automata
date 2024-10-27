@@ -62,7 +62,6 @@ theorem toBase_lead_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
   (toBase b n)[0]'(by
   simp[toBase, Nat.digits]
   split <;> try simp at hb
-  rename_i x y
   rw[Nat.digitsAux.eq_def]
   split <;> try simp at hn
   simp
@@ -161,8 +160,8 @@ theorem stretchLen_length (ls: List (List ℕ)) : (stretchLen ls).length = ls.le
   simp only [stretchLen, List.length_map]
 
 theorem stretchLen_uniform (ls: List (List ℕ)) :
-  l ∈ stretchLen ls →  l.length = maxLen ls:= by
-  intro h
+  ∀ l ∈ stretchLen ls,  l.length = maxLen ls:= by
+  intro l h
   simp only [stretchLen, List.mem_map] at h
   rcases h with ⟨x, hx, rfl⟩
   simp only [addLeadingZerosLength]

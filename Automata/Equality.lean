@@ -153,18 +153,25 @@ theorem eqBase_iff_eqInput (b : ℕ) (input: List (Fin 2 → Fin b)):
   . apply eqBase_if_equal_aux b input
 
 -- Start of step 2, left to right
-theorem tailIndex (l: List α) (hl: l.length > 0) :
+theorem tailIndex (l: List α) :
   ∀ i,∀ (hi: i + 1 < l.length), l.tail[i]'(by
     simp only [List.length_tail]; omega
   ) = l[i + 1] := by
+    intro i hi
+    have hl: 0 < l.length := by
+      apply lt_trans
+      swap
+      . exact hi
+      . simp
     induction l
-    case nil => simp only [List.length_nil, gt_iff_lt, lt_self_iff_false] at hl
+    case nil =>
+      simp only [List.length_nil, gt_iff_lt, lt_self_iff_false] at hl
     case cons x xs _ =>
       simp only [List.length_cons, add_lt_add_iff_right, List.tail, List.getElem_cons_succ,
         implies_true]
 
 --An Auxillary theorem for left to right
-theorem zipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
+theorem eqZipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
       (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = 2)
       (hls: ∀ ls ∈ lss, ls.length = lsLength) (hIndexEq: ∀i, ∀ (hi : i < lsLength), lss[0][i]'(by
         have: lss[0] ∈ lss := by
@@ -193,20 +200,20 @@ theorem zipOfIndexEq (lsLength : ℕ) (lss: List (List ℕ))
             apply hIndexEq
             simp only [add_lt_add_iff_right]
             exact hi
-            . have : lss[1] ∈ lss := by apply List.getElem_mem lss 1
-              specialize hls lss[1]
-              rw[hls this]
-              simp
-            . have : lss[0] ∈ lss := by apply List.getElem_mem lss 0
-              specialize hls lss[0]
-              rw[hls this]
-              simp
+            -- . have : lss[1] ∈ lss := by apply List.getElem_mem lss 1
+            --   specialize hls lss[1]
+            --   rw[hls this]
+            --   simp
+            -- . have : lss[0] ∈ lss := by apply List.getElem_mem lss 0
+            --   specialize hls lss[0]
+            --   rw[hls this]
+            --   simp
           . exact hf
 
 theorem mapLen : (mapToBase b [m, n]).length = 2 :=
     mapToBase_length b [m, n]
 
-theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
+theorem eqInput_if_equal (m n b : ℕ) (hb : b ≥ 2) :
   m = n →  ∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩ := by
     intro h
     --rw[h] at *
@@ -249,7 +256,7 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b > 1) :
 
     intro f hf
     rw[inputToBase] at hf
-    apply zipOfIndexEq (maxLen (mapToBase b [m, n])) (stretchLen (mapToBase b [m, n]))
+    apply eqZipOfIndexEq (maxLen (mapToBase b [m, n])) (stretchLen (mapToBase b [m, n]))
     . apply stretchLenIndexEq
     . exact hf
 
@@ -269,7 +276,7 @@ theorem equal_if_mapToBaseEq (m n b : ℕ):
   apply equal_if_toBaseEq
   exact h
 
-theorem eq_if_addLeadingZerosEq (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k, l])  (hk0 :0 < k.length) (hk: k[0] ≠ 0) (hl0 :0 < l.length) (hl: l[0] ≠ 0) :
+theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k, l])  (hk0 :0 < k.length) (hk: k[0] ≠ 0) (hl0 :0 < l.length) (hl: l[0] ≠ 0) :
   addLeadingZeros (n - k.length) k = addLeadingZeros (n - l.length) l → k = l := by
   intro h
   have kLen: n ≥ k.length := by
@@ -338,23 +345,179 @@ theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
   (stretchLen (mapToBase b [m, n]))[0]'(by simp[stretchLen_length, mapToBase_length]) = (stretchLen (mapToBase b [m, n]))[1]'(by simp[stretchLen_length, mapToBase_length]) → m = n := by
   intro h
   apply equal_if_mapToBaseEq
-  apply eq_if_addLeadingZerosEq (maxLen (mapToBase b [m, n]))
+  by_cases hm: m = 0
+  . simp[stretchLen, mapToBase, toBase, hm, maxLen, addLeadingZeros] at h
+    have : ∀x ∈ (b.digits n).reverse, x = 0 := by
+      intro x hx
+      rw[← h] at hx
+      simp at hx
+      exact hx.2
+    have hbn:  ∀x ∈ (b.digits n), x = 0 := by aesop
+    by_cases hn : n = 0
+    . simp[mapToBase, hn, hm]
+    . have: n > 0 := by exact Nat.zero_lt_of_ne_zero hn
+      have hPos := toBase_lead_nonzero b n hb this
+      specialize hbn ((toBase b n)[0]'(by
+        simp[toBase, Nat.digits]
+        split <;> try simp at hb
+        rw[Nat.digitsAux.eq_def]
+        split <;> try simp at hn
+        simp
+      ))
+      simp[toBase] at hbn
+      have hyp : (b.digits n)[(b.digits n).length - 1]'(by aesop) ∈ b.digits n := by apply List.getElem_mem
+      specialize hbn hyp
+      simp[toBase] at hPos
+      rw[hbn] at hPos
+      contradiction
+
+  apply eq_if_addLeadingZerosEq_nonzero (maxLen (mapToBase b [m, n]))
   . aesop
   . simp[mapToBase]
     refine Nat.ne_zero_iff_zero_lt.mpr ?_
     apply toBase_lead_nonzero
     exact hb
+    . omega
+  . simp[mapToBase]
+    by_cases hn: n = 0
+    . --simp[toBase, hn]
+      --intro h
+      simp[stretchLen, mapToBase, toBase, hn, maxLen, addLeadingZeros] at h
+      have hbm: ∀x ∈ (b.digits m).reverse, x = 0 := by
+        intro x hx
+        rw[h] at hx
+        simp at hx
+        exact hx.2
+      have: m > 0 := by exact Nat.zero_lt_of_ne_zero hm
+      have hPos := toBase_lead_nonzero b m hb this
+      specialize hbm ((toBase b m)[0]'(by
+        simp[toBase, Nat.digits]
+        split <;> try simp at hb
+        rw[Nat.digitsAux.eq_def]
+        split <;> try simp at hm
+        simp
+      ))
+      simp[toBase] at hbm
+      have hyp : (b.digits m)[(b.digits m).length - 1]'(by aesop) ∈ b.digits m := by apply List.getElem_mem
+      specialize hbm hyp
+      simp[toBase] at hPos
+      rw[hbm] at hPos
+      contradiction
+    . apply Nat.ne_zero_iff_zero_lt.mpr
+      apply toBase_lead_nonzero
+      exact hb
+      exact Nat.zero_lt_of_ne_zero hn
+      . by_cases hn: n = 0
+        . simp[stretchLen, mapToBase, toBase, hn, maxLen, addLeadingZeros] at h
+          have hbm: ∀x ∈ (b.digits m).reverse, x = 0 := by
+            intro x hx
+            rw[h] at hx
+            simp at hx
+            exact hx.2
+          have: m > 0 := by exact Nat.zero_lt_of_ne_zero hm
+          have hPos := toBase_lead_nonzero b m hb this
+          specialize hbm ((toBase b m)[0]'(by
+            simp[toBase, Nat.digits]
+            split <;> try simp at hb
+            rw[Nat.digitsAux.eq_def]
+            split <;> try simp at hm
+            simp
+          ))
+          simp[toBase] at hbm
+          have hyp : (b.digits m)[(b.digits m).length - 1]'(by aesop) ∈ b.digits m := by apply List.getElem_mem
+          specialize hbm hyp
+          simp[toBase] at hPos
+          rw[hbm] at hPos
+          contradiction
+        . simp[mapToBase]
+          simp[toBase, Nat.digits]
+          split <;> try simp at hb
+          rw[Nat.digitsAux.eq_def]
+          split <;> try simp at hn
+          simp
+  . exact h
+  . simp[mapToBase]
+    simp[toBase, Nat.digits]
+    split <;> try simp at hb
+    rw[Nat.digitsAux.eq_def]
+    split <;> try simp at hm
+    simp
 
+theorem indexEqOfEqZip (b lsLength : ℕ) (lss: List (List ℕ))
+      (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = 2)
+      (hls: ∀ ls ∈ lss, ls.length = lsLength) :
+      (∀ f ∈ (zipToAlphabetFin lsLength 2 lss hlb hlss hls), (f 0).val = f 1)
+      → ∀i, ∀ (hi : i < lsLength), lss[0][i]'(by
+        have: lss[0] ∈ lss := by
+          apply List.getElem_mem
+        rw[hls lss[0] this]
+        exact hi
+      ) = lss[1][i]'(by
+        have: lss[1] ∈ lss := by
+          apply List.getElem_mem
+        rw[hls lss[1] this]
+        exact hi
+      ) := by
+        intro h
+        induction lsLength generalizing lss
+        case zero => intro i hi; contradiction
+        case succ m ih =>
+          intro i hi
+          simp[zipToAlphabetFin] at h
+          rcases h with ⟨h1, h2⟩
+          specialize ih (List.map (fun ls ↦ ls.tail) lss)
+          specialize ih (zipTailHlb lss hlb)
+          specialize ih (zipTailHlss 2 lss hlss)
+          specialize ih (zipTailHls lss hls)
+          specialize ih h2
+          simp at ih
+          have lss0 : lss[0] ∈ lss := by apply List.getElem_mem
+          have lss1 : lss[1] ∈ lss := by apply List.getElem_mem
+          have i0Len : i < lss[0].length := by
+            specialize hls lss[0]
+            specialize hls lss0
+            rwa [hls]
+          have i1Len : i < lss[1].length := by
+            specialize hls lss[1]
+            specialize hls lss1
+            rwa [hls]
+          match i with
+          | 0 => exact h1
+          | n + 1 =>
+            simp at hi
+            specialize ih n hi
+            -- rw[← tailIndex lss[0] n i0Len]
+            -- rw[← tailIndex lss[1] n i1Len]
+            simp only [tailIndex, *] at ih
+            exact ih
 
+set_option pp.proofs true
 
-
-
-theorem equal_if_eqInput (m n b : ℕ) (hb : b > 1) :
+theorem equal_if_eqInput (m n b : ℕ) (hb : b ≥ 2) :
   (∀ f ∈ inputToBase b hb [m, n], (f ⟨0, by simp⟩).val = f ⟨1, by simp⟩) → m = n := by
+    intro h
+    simp[inputToBase] at h
+    apply eq_if_stretchLenEq
+    . exact hb
+    . have inter := indexEqOfEqZip b (maxLen (mapToBase b [m, n]))  (stretchLen (mapToBase b [m, n])) (stretchLen_of_mapToBase_lt_base b [m, n] hb) (inputToBase.proof_1 b [m, n]) (fun ls hls ↦ stretchLen_uniform (mapToBase b [m, n]) ls hls)
+      specialize inter h
+      have: 0 < (stretchLen (mapToBase b [m, n])).length := by
+        simp[mapToBase_length, stretchLen_length]
+      have: 1 < (stretchLen (mapToBase b [m, n])).length := by
+        simp[mapToBase_length, stretchLen_length]
 
-
-
-  sorry
+      have:= stretchLen_uniform (mapToBase b [m, n])
+      have len0 : (stretchLen (mapToBase b [m, n]))[0].length = maxLen (mapToBase b [m, n]) := by
+        specialize this  (stretchLen (mapToBase b [m, n]))[0]
+        have mem0: (stretchLen (mapToBase b [m, n]))[0] ∈ stretchLen (mapToBase b [m, n]) := by apply List.getElem_mem
+        exact this mem0
+      have len1 : (stretchLen (mapToBase b [m, n]))[1].length = maxLen (mapToBase b [m, n]) := by
+        specialize this  (stretchLen (mapToBase b [m, n]))[1]
+        have mem1: (stretchLen (mapToBase b [m, n]))[1] ∈ stretchLen (mapToBase b [m, n]) := by apply List.getElem_mem
+        exact this mem1
+      apply List.ext_getElem
+      . simp only [len0, len1]
+      . aesop
 
 --statement of Step 2
 theorem eqInput_iff_equal (m n b : ℕ) (hb : b > 1):
@@ -375,24 +538,17 @@ theorem eqBase_iff_equal (m n b : ℕ) (hb: b > 1):
     apply (eqBase_iff_eqInput b (inputToBase b hb [m, n])).mp h
 
 -- End of correcteness proof
+#eval (eqBase 2).eval (inputToBase 2 (by norm_num) [1, 1])
 
-def leBase (k: ℕ)  : DFA (Fin 2 → Fin k) (Fin 2) := {
-  transition := fun f s => match s with
-    | 0 => if (f 0).val <= (f 1).val then 0 else 1
-    | 1 => 1
-  start := 0
-  output := fun x => x == 0
-}
+theorem one_is_one : 1 = 1 := by
+  apply (eqBase_iff_equal 1 1 2 (by norm_num)).mpr
+  rfl
 
-def addBase (k: ℕ) : DFA (Fin 3 → Fin k) (Fin 3) := {
-  transition := fun f s => match s with
-    | 0 => if (f 0).val + f 1 == f 2 then 0 else
-      if (f 0).val + f 1 + 1 == f 2 then 1
-      else 2
-    | 1 => if (f 0).val + f 1 + 1 == f 2 + k then 1 else
-      if (f 0).val + f 1 == f 2 + k then 0
-      else 2
-    | 2 => 2
-  start := 0
-  output := fun x => x == 0
-}
+example : DFAO.eval (eqBase 2)
+    (inputToBase 2
+      (of_eq_true
+        (eq_true
+          (Mathlib.Meta.NormNum.isNat_lt_true (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 1))
+            (Mathlib.Meta.NormNum.isNat_ofNat ℕ (Eq.refl 2)) (Eq.refl false))))
+      [1, 1]) =
+  true := by rfl
