@@ -1,5 +1,6 @@
 import Mathlib.Tactic
 import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Lemmas
 import Mathlib.Data.Nat.Digits
 import Init.Data.List.Lemmas
 
@@ -196,7 +197,8 @@ theorem zipTailHlss (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l)
  : (List.map (fun ls ↦ ls.tail) lss).length = l := by
   simp only [List.length_map, hlss]
 
-theorem zipTailHls (lss: List (List ℕ)) (hls : ∀ ls ∈ lss, ls.length = m + 1) : ∀ ls ∈ List.map (fun ls ↦ ls.tail) lss, ls.length = m := fun
+theorem zipTailHls (lss: List (List ℕ)) (hls : ∀ ls ∈ lss, ls.length = m + 1) :
+∀ ls ∈ List.map (fun ls ↦ ls.tail) lss, ls.length = m
           | .nil => by
             simp only [List.mem_map, List.length_nil, forall_exists_index, and_imp]
             intro x hx
