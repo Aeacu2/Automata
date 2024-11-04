@@ -247,11 +247,9 @@ def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
           apply hlb lss[i]
           . apply List.mem_iff_getElem.mpr
             simp only [Fin.getElem_fin, hlss]
-            use i
-            use i.isLt
+            use i, i.isLt
           . apply List.mem_iff_getElem.mpr
-            use 0
-            use this)⟩
+            use 0, this)⟩
         ) :: (zipToAlphabetFin m l (lss.map (fun ls => ls.tail))
         (by apply zipTailHlb; exact hlb)
         (by apply zipTailHlss; exact hlss)
