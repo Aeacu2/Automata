@@ -551,3 +551,17 @@ theorem foo : 100000 = 100000 := by
   native_decide
 
 #print axioms foo
+
+theorem neqBase_iff_neq : a ≠ b ↔ (eqBase 2).negate.eval (inputToBase 2 (by norm_num) [a, b]) := by
+  constructor
+  . simp only [DFA.negate_eval]
+    by_contra h
+    simp at h
+    rcases h with ⟨h1, h2⟩
+    apply h1
+    exact (eqBase_iff_equal a b 2 (by norm_num)).mpr h2
+  . simp only [DFA.negate_eval]
+    intro h
+    by_contra h1
+    have h2 := (eqBase_iff_equal a b 2 (by norm_num)).mp h1
+    simp_all

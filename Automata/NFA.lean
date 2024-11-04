@@ -39,29 +39,6 @@ theorem NFA.toDFA_evalFrom (nfa : NFA α state) (s : List α) (qs: List state) [
 theorem NFA.toDFA_eval (nfa : NFA α state) (s : List α) [BEq state]
   : (nfa.toDFA).eval s = nfa.eval s := NFA.toDFA_evalFrom nfa s nfa.start
 
-variable (β : Type)
-
-
--- Auxilliary theorems for recover
-theorem finLt (m : Fin n) (b : ℕ) (h : n ≥ 1): b < m.val → b < n-1 := by omega
-
-theorem finPred (m : Fin n) (a : Fin n) (h : a > m): a.val - 1 < n - 1 := by omega
-
-
--- Auxilliary function for project
-def recover (h: n ≥ 1) (m : Fin n) (x: Fin k):
-  (Fin (n-1) → Fin k) → (Fin n → Fin k) :=
-    fun i => fun j => if h1: j.val < m.val then i ⟨j.val, finLt m j.val h h1⟩
-      else if h2: j.val > m.val then i ⟨j.val - 1, finPred m j h2⟩ else x
-
-def project (dfa : DFA (Fin n → Fin k) state) (h: n ≥ 1) (m : Fin n) [BEq state] :
-  NFA (Fin (n - 1) → Fin k) state := {
-  transition :=
-  fun a q => (List.map (fun (x : Fin k) => dfa.transition (recover h m x a) q)
-    (FinEnum.toList (Fin k)))
-  start := [dfa.start]
-  output := dfa.output
-}
 
 /- USELESS CODE
 def project' (dfa : DFA (β × α) state) [BEq state] [FinEnum β] : NFA α state := {
