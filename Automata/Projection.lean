@@ -21,12 +21,12 @@ def recover (m : Fin (n + 1)) (x: Fin k):
 
 
 
-def project (dfa : DFA (Fin (n+1) → Fin k) state) (m : Fin (n+1)) [BEq state] :
+def project (dfa : DFA (Fin (n+1) → Fin k) state) (m : Fin (n+1)) [DecidableEq state] :
   NFA (Fin n → Fin k) state := {
   transition :=
-  fun a q => (List.map (fun (x : Fin k) => dfa.transition (recover m x a) q)
-    (FinEnum.toList (Fin k)))
-  start := [dfa.start]
+  fun a q => ⟨(List.map (fun (x : Fin k) => dfa.transition (recover m x a) q)
+    (FinEnum.toList (Fin k))).dedup, by apply List.nodup_dedup⟩
+  start := ⟨[dfa.start], by exact List.nodup_singleton dfa.start⟩
   output := dfa.output
 }
 
