@@ -61,3 +61,10 @@ theorem NFA.pumping_lemma_evalFrom [Fintype state] [DecidableEq state] {nfa : NF
   intro y h
   specialize hy y h
   rwa [← toDFA_evalFrom nfa y qs]
+
+theorem NFA.pumping_lemma_eval [Fintype state] [DecidableEq state] {nfa : NFA α state} {x : List α}(hx : nfa.eval x)(hlen : Fintype.card (ListND state) ≤ x.length) :
+    ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card (ListND state) ∧ b ≠ []
+      ∧ ∀ y ∈ ({a} * {b}∗ * {c} : Language α), nfa.eval y := by
+  exact pumping_lemma_evalFrom hx hlen
+
+

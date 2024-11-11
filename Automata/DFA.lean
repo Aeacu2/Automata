@@ -60,6 +60,7 @@ theorem DFAO.transFrom_split [Fintype state] {dfao : DFAO α state out} {x : Lis
   rwa [← hq, ← transFrom_of_append, ← transFrom_of_append, ← List.append_assoc,
     List.take_append_drop, List.take_append_drop]
 
+-- Question: Languages use Sets, should we use them, or just do exist n?
 theorem DFAO.transFrom_of_pow {dfao : DFAO α state out} {x y : List α} {s : state} (hx : dfao.transFrom x s = s)
     (hy : y ∈ ({x} : Language α)∗) : dfao.transFrom y s = s := by
   rw [Language.mem_kstar] at hy
@@ -99,11 +100,11 @@ def DFAO.evalFrom (dfao : DFAO α state out) (x : List α) (q : state) : out :=
 def DFAO.eval (dfao : DFAO α state out) (x : List α) : out :=
   DFAO.evalFrom dfao x dfao.start
 
-def DFAO.evalFrom_of_append (dfao : DFAO α state out) (x y : List α) (q : state) :
+theorem DFAO.evalFrom_of_append (dfao : DFAO α state out) (x y : List α) (q : state) :
   dfao.evalFrom (x ++ y) q = dfao.evalFrom y (dfao.transFrom x q) := by
   simp[DFAO.evalFrom, DFAO.transFrom_of_append]
 
-def DFAO.pumping_lemma_evalFrom [Fintype state] {dfao : DFAO α state out} {x : List α} {s : state} {o : out} (hx : dfao.evalFrom x s = o)(hlen : Fintype.card state ≤ x.length) :
+theorem DFAO.pumping_lemma_evalFrom [Fintype state] {dfao : DFAO α state out} {x : List α} {s : state} {o : out} (hx : dfao.evalFrom x s = o)(hlen : Fintype.card state ≤ x.length) :
     ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card state ∧ b ≠ []
       ∧ ∀ y ∈ ({a} * {b}∗ * {c} : Language α), dfao.evalFrom y s = o := by
   let t := dfao.transFrom x s
@@ -121,7 +122,7 @@ def DFAO.pumping_lemma_evalFrom [Fintype state] {dfao : DFAO α state out} {x : 
     simp only [evalFrom] at hx
     simp only [evalFrom, hy, hx]
 
-def DFAO.pumping_lemma_eval [Fintype state] {dfao : DFAO α state out} {x : List α} {o : out} (hx : dfao.eval x = o)(hlen : Fintype.card state ≤ x.length) :
+theorem DFAO.pumping_lemma_eval [Fintype state] {dfao : DFAO α state out} {x : List α} {o : out} (hx : dfao.eval x = o)(hlen : Fintype.card state ≤ x.length) :
     ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card state ∧ b ≠ []
       ∧ ∀ y ∈ ({a} * {b}∗ * {c} : Language α), dfao.eval y = o := by
   exact dfao.pumping_lemma_evalFrom hx hlen
