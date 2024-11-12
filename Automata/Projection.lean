@@ -12,20 +12,17 @@ theorem finLt (m : Fin (n+1)) (b : ℕ) : b < m.val → b < n := by omega
 
 theorem finPred (m : Fin n) (a : Fin n) (h : a > m): a.val - 1 < n - 1 := by omega
 
-
 -- Auxilliary function for project
-def recover (m : Fin (n + 1)) (x: Fin k):
-  (Fin n → Fin k) → (Fin (n + 1) → Fin k) :=
+def recover (m : Fin (n + 1)) (x: Fin (b+2)):
+  (Fin n → Fin (b+2)) → (Fin (n + 1) → Fin (b+2)) :=
     fun i => fun j => if h1: j.val < m.val then i ⟨j.val, finLt m j.val h1⟩
       else if h2: j.val > m.val then i ⟨j.val - 1, finPred m j h2⟩ else x
 
-
-
-def project (dfa : DFA (Fin (n+1) → Fin k) state) (m : Fin (n+1)) [DecidableEq state] :
-  NFA (Fin n → Fin k) state := {
+def project (dfa : DFA (Fin (n+1) → Fin (b+2)) state) (m : Fin (n+1)) [DecidableEq state] :
+  NFA (Fin n → Fin (b+2)) state := {
   transition :=
-  fun a q => ⟨(List.map (fun (x : Fin k) => dfa.transition (recover m x a) q)
-    (FinEnum.toList (Fin k))).dedup, by apply List.nodup_dedup⟩
+  fun a q => ⟨(List.map (fun (x : Fin (b+2)) => dfa.transition (recover m x a) q)
+    (FinEnum.toList (Fin (b+2)))).dedup, by apply List.nodup_dedup⟩
   start := ⟨[dfa.start], by exact List.nodup_singleton dfa.start⟩
   output := dfa.output
 }
@@ -35,7 +32,7 @@ def project (dfa : DFA (Fin (n+1) → Fin k) state) (m : Fin (n+1)) [DecidableEq
 -- Fix:
 #eval (project (addBase 2) 2).eval [fun _ => 0, fun _ => 1]
 
-theorem DFAO.bounded_accept [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) state out) (x : List (Fin n → Fin (b+2))) (o: out)(h: ∀ (x : List (Fin n → Fin (b+2))), dfao.eval x = o → (∀ y, (∃ m, y = (List.replicate m (fun _ => 0)) ++ x) →  dfao.eval y = o)) : ∀ z, (∃ k, z = (List.replicate k (fun _ => 0)) ++ x) ∧ dfao.eval z = o → dfao.eval (List.replicate (Fintype.card state) (fun _ => 0) ++ x) = o := by
+theorem DFAO.bounded_out [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) state out) (x : List (Fin n → Fin (b+2))) (o: out)(h: ∀ (x : List (Fin n → Fin (b+2))), dfao.eval x = o → (∀ y, (∃ m, y = (List.replicate m (fun _ => 0)) ++ x) →  dfao.eval y = o)) : ∀ z, (∃ k, z = (List.replicate k (fun _ => 0)) ++ x) ∧ dfao.eval z = o → dfao.eval (List.replicate (Fintype.card state) (fun _ => 0) ++ x) = o := by
   rintro z ⟨⟨k, hz⟩, hzo⟩
   by_cases hkstate : k ≤ Fintype.card state
   . apply h z
@@ -74,11 +71,12 @@ theorem DFAO.bounded_accept [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) s
     have habzero : ∀ i, ∀ (hi: i < a.length + b'.length),  (a ++ b')[i]' (by rw[List.length_append]; exact hi) = fun _ => 0 := by
       intro i hi
       rw[← List.getElem_append_left (a++b') c]
-      -- rw[← hzabc] Why?
-      subst hzabc
+      trans z[i]
+      . congr; exact hzabc.symm
       specialize habzero' i hi
-      -- Why not exact?
-      simp_all
+      convert habzero'
+      simp only [List.append_assoc, List.length_append]
+      . omega
 
     have hazero : ∀ i, ∀ (hi: i < a.length),  a[i]' (by omega) = fun _ => 0 := by
       intro i hi
@@ -98,16 +96,9 @@ theorem DFAO.bounded_accept [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) s
     have har: a = List.replicate a.length (fun _ => 0) := by
       apply List.ext_getElem
       . simp
-      . aesop
-        -- intro n_1 h₁ h₂
-        -- subst hzabc hacl hk
-        -- simp_all only [ne_eq, List.append_assoc, forall_exists_index, List.append_cancel_right_eq, List.replicate_inj,
-        -- or_true, and_true, forall_eq', true_implies, List.getElem_replicate]
-    -- AESOP wouldn't work again, even on the same problem!
-    -- have har: a = List.replicate a.length (fun _ => 0) := by
-    --   apply List.ext_getElem
-    --   . simp
-    --   . aesop
+      . intro n_1 h₁ h₂
+        simp only [List.getElem_replicate]
+        exact hazero n_1 h₁
     have hbr: b' = List.replicate b'.length (fun _ => 0) := by
       apply List.ext_getElem
       . simp
@@ -118,14 +109,19 @@ theorem DFAO.bounded_accept [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) s
     have hk : (List.replicate k (fun x : Fin n → Fin (b+2) => 0)) = (List.replicate (a.length + b'.length) (fun x : Fin n → Fin (b+2) => 0)) ++ (List.replicate (k - a.length - b'.length) (fun x : Fin n → Fin (b+2) => 0)) := by
       simp[List.append_replicate_replicate]
       omega
-    -- Why Fail? subst hk
     have hcx : c = (List.replicate (k - a.length - b'.length) (fun _ => 0)) ++ x := by
       rw[har, hbr] at hzabc
       rw[hzabc] at hz
       simp only [List.append_replicate_replicate] at hz
       -- AHhhh! NO!
       -- rw[hk] at hz
-      sorry
+      have : (List.replicate k fun x ↦ 0) ++ x = (List.replicate (a.length + b'.length) fun x ↦ 0) ++ (List.replicate (k - a.length - b'.length) fun x ↦ 0) ++ x := by
+        congr
+        simp only [List.append_replicate_replicate, List.replicate_inj, or_true, and_true]
+        omega
+      rw[this, List.append_assoc] at hz
+      exact List.append_cancel_left hz
+
     have hac : a ++ c = List.replicate (k - b'.length) (fun _ => 0) ++ x := by
       rw[hcx, har]
       rw[← List.append_assoc]
@@ -151,24 +147,30 @@ theorem DFAO.bounded_accept [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) s
 
       exact ih
 
-#check DFAO.bounded_accept
+theorem DFA.bounded_accept [Fintype state] (dfa : DFA (Fin n → Fin (b+2)) state) (x : List (Fin n → Fin (b+2)))(h: ∀ (x : List (Fin n → Fin (b+2))), dfa.eval x→ (∀ y, (∃ m, y = (List.replicate m (fun _ => 0)) ++ x) →  dfa.eval y)) : ∀ z, (∃ k, z = (List.replicate k (fun _ => 0)) ++ x) ∧ dfa.eval z → dfa.eval (List.replicate (Fintype.card state) (fun _ => 0) ++ x) := by
+  have := DFAO.bounded_out dfa x true
+  intro z a
+  simp_all only [forall_exists_index, and_imp]
+  obtain ⟨left, right⟩ := a
+  obtain ⟨w, h_1⟩ := left
+  subst h_1
+  apply this
+  · intro x_1 a y x_2 h_1
+    subst h_1
+    apply h
+    · simp_all only
+    · rfl
+  · rfl
+  · exact right
 
---Previous version of recover and project
--- def recover' (h: n ≥ 1) (m : Fin n) (x: Fin k):
---   (Fin (n-1) → Fin k) → (Fin n → Fin k) :=
---     fun i => fun j => if h1: j.val < m.val then i ⟨j.val, finLt m j.val h h1⟩
---       else if h2: j.val > m.val then i ⟨j.val - 1, finPred m j h2⟩ else x
-
--- def project' (dfa : DFA (Fin n → Fin k) state) (h: n ≥ 1) (m : Fin n) [BEq state] :
---   NFA (Fin (n - 1) → Fin k) state := {
---   transition :=
---   fun a q => (List.map (fun (x : Fin k) => dfa.transition (recover' h m x a) q)
---     (FinEnum.toList (Fin k)))
---   start := [dfa.start]
---   output := dfa.output
--- }
-
-
--- #eval (project' (addBase 2) (by norm_num) 2).eval [fun (_ : Fin 2) => 1]
-
--- #eval (project' (addBase 2) (by norm_num) 2).eval [fun _ => 0, fun _ => 1]
+theorem NFA.bounded_accept [Fintype state] [DecidableEq state] (nfa : NFA (Fin n → Fin (b+2)) state) (x : List (Fin n → Fin (b+2)))(h: ∀ (x : List (Fin n → Fin (b+2))), nfa.eval x→ (∀ y, (∃ m, y = (List.replicate m (fun _ => 0)) ++ x) →  nfa.eval y)) : ∀ z, (∃ k, z = (List.replicate k (fun _ => 0)) ++ x) ∧ nfa.eval z → nfa.eval (List.replicate (Fintype.card (ListND state)) (fun _ => 0) ++ x) := by
+  simp only [← NFA.toDFA_eval] at *
+  have := DFA.bounded_accept (nfa.toDFA) x h
+  intro z a
+  simp_all only [forall_exists_index, and_imp]
+  obtain ⟨left, right⟩ := a
+  obtain ⟨w, h_1⟩ := left
+  subst h_1
+  apply this
+  · rfl
+  · exact right

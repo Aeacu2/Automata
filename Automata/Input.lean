@@ -199,32 +199,32 @@ theorem zipTailHlss (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l)
 
 theorem zipTailHls (lss: List (List ℕ)) (hls : ∀ ls ∈ lss, ls.length = m + 1) :
 ∀ ls ∈ List.map (fun ls ↦ ls.tail) lss, ls.length = m
-          | .nil => by
-            simp only [List.mem_map, List.length_nil, forall_exists_index, and_imp]
-            intro x hx
-            specialize hls x hx
-            rcases x
-            . simp only [List.length_nil, self_eq_add_left, AddLeftCancelMonoid.add_eq_zero,
-              one_ne_zero, and_false] at hls
-            . simp only [List.length_cons, add_left_inj] at hls
-              simp only [List.tail_cons]
-              intro h
-              simp only [h, List.length_nil] at hls
-              assumption
-          | .cons head tail => by
-            simp only [List.mem_map, List.length_cons, forall_exists_index, and_imp]
-            intro x hx h
-            specialize hls x hx
-            have : x.tail.length = m := by
-              have: x.length - 1 = m := by
-                omega
-              rw[← this]
-              apply List.length_tail x
-            rw[← this, h]
-            have hxtail := List.length_tail x.tail
-            rw[h, List.tail] at hxtail
-            have: (head :: tail).length > 0 := by simp
-            omega
+  | .nil => by
+    simp only [List.mem_map, List.length_nil, forall_exists_index, and_imp]
+    intro x hx
+    specialize hls x hx
+    rcases x
+    . simp only [List.length_nil, self_eq_add_left, AddLeftCancelMonoid.add_eq_zero,
+      one_ne_zero, and_false] at hls
+    . simp only [List.length_cons, add_left_inj] at hls
+      simp only [List.tail_cons]
+      intro h
+      simp only [h, List.length_nil] at hls
+      assumption
+  | .cons head tail => by
+    simp only [List.mem_map, List.length_cons, forall_exists_index, and_imp]
+    intro x hx h
+    specialize hls x hx
+    have : x.tail.length = m := by
+      have: x.length - 1 = m := by
+        omega
+      rw[← this]
+      apply List.length_tail x
+    rw[← this, h]
+    have hxtail := List.length_tail x.tail
+    rw[h, List.tail] at hxtail
+    have: (head :: tail).length > 0 := by simp
+    omega
 
 def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
 (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)

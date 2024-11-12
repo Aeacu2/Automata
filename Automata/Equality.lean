@@ -259,6 +259,16 @@ theorem equal_if_mapToBaseEq (m n b : ℕ):
   apply equal_if_toBaseEq
   exact h
 
+section
+
+variable (l : List ℕ) (h : 5 < l.length)
+
+set_option pp.notation false in
+#check l[5]
+
+end
+
+
 theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k, l])  (lenk :0 < k.length) (hk: k[0] ≠ 0) (lenl :0 < l.length) (hl: l[0] ≠ 0) :
   addLeadingZeros (n - k.length) k = addLeadingZeros (n - l.length) l → k = l := by
   intro h
