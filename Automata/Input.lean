@@ -3,6 +3,7 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Lemmas
 import Mathlib.Data.Nat.Digits
 import Init.Data.List.Lemmas
+import Automata.Replicate
 
 /-
 Major function: inputToBase
@@ -17,8 +18,8 @@ toBase_lt_base, mapToBase_lt_base, mapToBase_length
 
 Step 2: Stretch each list to uniform length by adding leading zeros, get 'lss' : List (List ℕ)
 
-Functions involved: addLeadingZeros, stretchLen
-Theorems involved: addLeadingZeros_elem, addLeadingZerosLength, stretchLen_length, stretchLen_uniform
+Functions involved: addZeroes, stretchLen
+Theorems involved: addZeroes_elem, addZeroesLength, stretchLen_length, stretchLen_uniform
 
 Step 3: Zip the lists together, giving less than base proofs to turn Nats into Fin bs, to get the input to automatas: List (Fin (l.length) → Fin b)
 
@@ -70,7 +71,7 @@ theorem toBase_lead_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
   simp[toBase]
   exact digits_end_nonzero b n hb hn
 
-theorem toBase_lt_base (b: ℕ) (n: ℕ) (hb: b > 1) :
+theorem toBase_lt_base (b: ℕ) (n: ℕ) (hb: b ≥ 2) :
   x ∈ (toBase b n) → x < b := by
   intro h
   simp only [toBase] at h
@@ -89,13 +90,13 @@ theorem ofBase_toBase (b: ℕ) (n: ℕ) : ofBase b (toBase b n) = n := by
   rw [Nat.ofDigits_eq_foldr]
   rfl
 
-def addLeadingZeros (n: ℕ) (l: List ℕ): List ℕ :=
+def addZeroes (n: ℕ) (l: List ℕ): List ℕ :=
   (List.replicate n 0) ++ l
 
-theorem addLeadingZeros_elem (n: ℕ) (l: List ℕ) :
-  x ∈ (addLeadingZeros n l) → x = 0 ∨ x ∈ l := by
+theorem addZeroes_elem (n: ℕ) (l: List ℕ) :
+  x ∈ (addZeroes n l) → x = 0 ∨ x ∈ l := by
   intro h
-  simp only [addLeadingZeros, List.mem_append, List.replicate] at h
+  simp only [addZeroes, List.mem_append, List.replicate] at h
   rcases h with (h | h)
   . left
     have : x ∈ [0] := List.replicate_subset_singleton n 0 h
@@ -103,17 +104,23 @@ theorem addLeadingZeros_elem (n: ℕ) (l: List ℕ) :
   . right
     exact h
 
-theorem addLeadingZerosLength (n: ℕ) (l: List ℕ) :
-  (addLeadingZeros n l).length = n + l.length :=
-  by simp only [addLeadingZeros, List.length_append, List.length_replicate]
+theorem addZeroesLength (n: ℕ) (l: List ℕ) :
+  (addZeroes n l).length = n + l.length :=
+  by simp only [addZeroes, List.length_append, List.length_replicate]
 
-theorem ofBase_addLeadingZeros (b: ℕ)(n: ℕ) (l: List ℕ) :
-  ofBase b (addLeadingZeros n l) = ofBase b l := by
-  simp only [ofBase, addLeadingZeros]
+theorem addZeroes_zero (n: ℕ) (l: List ℕ) (hi : i < n):
+  (addZeroes n l)[i]'(by simp[addZeroesLength]; omega) = 0 := by
+  simp only [addZeroes]
+  apply List.getElem_of_replicate_append_left
+  exact hi
+
+theorem ofBase_addZeroes (b: ℕ)(n: ℕ) (l: List ℕ) :
+  ofBase b (addZeroes n l) = ofBase b l := by
+  simp only [ofBase, addZeroes]
   induction n
   case zero => simp
   case succ n ih =>
-    simp [addLeadingZeros, List.replicate, List.foldl, ih]
+    simp [addZeroes, List.replicate, List.foldl, ih]
 
 def maxLen : (l: List (List α)) → ℕ
   | [] => 0
@@ -155,7 +162,7 @@ theorem mapToBase_length (b: ℕ) (l: List ℕ) : (mapToBase b l).length = l.len
   simp only [mapToBase, List.length_map]
 
 def stretchLen (ls: List (List ℕ)) : List (List ℕ) :=
-  ls.map (fun l => addLeadingZeros (maxLen ls - l.length) l)
+  ls.map (fun l => addZeroes (maxLen ls - l.length) l)
 
 theorem stretchLen_length (ls: List (List ℕ)) : (stretchLen ls).length = ls.length := by
   simp only [stretchLen, List.length_map]
@@ -165,7 +172,7 @@ theorem stretchLen_uniform (ls: List (List ℕ)) :
   intro l h
   simp only [stretchLen, List.mem_map] at h
   rcases h with ⟨x, hx, rfl⟩
-  simp only [addLeadingZerosLength]
+  simp only [addZeroesLength]
   have: x.length ≤ maxLen ls := len_lt_maxLen x ls hx
   omega
 
@@ -174,14 +181,16 @@ theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (l: List ℕ) (hb: b > 1) :
   intro x hx y hy
   simp only [stretchLen, List.mem_map] at hx
   rcases hx with ⟨z, left, rfl⟩
-  have h := addLeadingZeros_elem (maxLen (mapToBase b l) - z.length) z hy
+  have h := addZeroes_elem (maxLen (mapToBase b l) - z.length) z hy
   rcases h with (rfl | h)
   . omega
   apply mapToBase_lt_base
   . exact hb
-  . simp only [addLeadingZeros, List.replicate] at hy
+  . simp only [addZeroes, List.replicate] at hy
     exact left
   . exact h
+
+
 
 theorem zipTailHlb (lss: List (List ℕ))
 (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b): ∀ x ∈ List.map (fun ls ↦ ls.tail) lss, ∀ y ∈ x, y < b := by

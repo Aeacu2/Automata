@@ -17,10 +17,13 @@ structure NFA (α state : Type) :=
 def NFA.transList (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ListND state :=
   ⟨(qs.val.bind fun q => nfa.transition a q).dedup, (by apply List.nodup_dedup)⟩
 
-def NFA.evalFrom (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : Bool :=
+def NFA.transFrom (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : ListND state :=
   match s with
-    | [] => qs.val.any nfa.output
-    | a::as => NFA.evalFrom nfa as (NFA.transList nfa a qs)
+    | [] => qs
+    | a::as => NFA.transFrom nfa as (NFA.transList nfa a qs)
+
+def NFA.evalFrom (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : Bool :=
+  (nfa.transFrom s qs).val.any nfa.output
 
 def NFA.eval (nfa : NFA α state) (s : List α) [DecidableEq state] : Bool :=
   NFA.evalFrom nfa s nfa.start
@@ -37,7 +40,10 @@ theorem NFA.toDFA_evalFrom (nfa : NFA α state) (x : List α) (qs: ListND state)
   (nfa.toDFA).evalFrom x qs = nfa.evalFrom x qs := by
   induction x generalizing qs
   case nil =>
-    simp only [NFA.evalFrom, DFAO.evalFrom, DFAO.transFrom, NFA.toDFA]
+    simp [NFA.evalFrom, DFAO.evalFrom, DFAO.transFrom, NFA.toDFA]
+    obtain ⟨val, property⟩ := qs
+    simp_all only
+    rfl
   case cons y ys ih =>
     simp only [NFA.evalFrom, DFAO.evalFrom, NFA.toDFA_transition]
     exact ih (nfa.transList y qs)
@@ -66,5 +72,3 @@ theorem NFA.pumping_lemma_eval [Fintype state] [DecidableEq state] {nfa : NFA α
     ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card (ListND state) ∧ b ≠ []
       ∧ ∀ y ∈ ({a} * {b}∗ * {c} : Language α), nfa.eval y := by
   exact pumping_lemma_evalFrom hx hlen
-
-

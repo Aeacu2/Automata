@@ -233,10 +233,10 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b ≥ 2) :
       simp only [lenStretchLen0]
       exact hi
     ) = (stretchLen (mapToBase b [m, n]))[1][i]'(by
-      simp[lenStretchLen1]
+      simp only [lenStretchLen1]
       exact hi
     ) := by
-      simp[stretchLenEq]
+      simp only [stretchLenEq]
 
     intro f hf
     rw[inputToBase] at hf
@@ -269,8 +269,8 @@ set_option pp.notation false in
 end
 
 
-theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k, l])  (lenk :0 < k.length) (hk: k[0] ≠ 0) (lenl :0 < l.length) (hl: l[0] ≠ 0) :
-  addLeadingZeros (n - k.length) k = addLeadingZeros (n - l.length) l → k = l := by
+theorem eq_if_addZeroesEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k, l])  (lenk :0 < k.length) (hk: k[0] ≠ 0) (lenl :0 < l.length) (hl: l[0] ≠ 0) :
+  addZeroes (n - k.length) k = addZeroes (n - l.length) l → k = l := by
   intro h
   simp only [maxLen, zero_le, max_eq_left, ge_iff_le, max_le_iff] at hn
   have kLen: n ≥ k.length := hn.1
@@ -280,13 +280,13 @@ theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxL
     by_contra hL
     have hLen: n - k.length < n - l.length ∨ n - k.length > n - l.length := by
       exact Nat.lt_or_gt_of_ne hL
-    have kAddLen: (addLeadingZeros (n - k.length) k).length = n := by simp only [addLeadingZerosLength]; omega
-    have lAddLen: (addLeadingZeros (n - l.length) l).length = n :=  by simp only [addLeadingZerosLength]; omega
+    have kAddLen: (addZeroes (n - k.length) k).length = n := by simp only [addZeroesLength]; omega
+    have lAddLen: (addZeroes (n - l.length) l).length = n :=  by simp only [addZeroesLength]; omega
     rcases hLen with (hLen | hLen)
-    . have addl : (addLeadingZeros (n - l.length) l)[n-k.length] = 0 := by
+    . have addl : (addZeroes (n - l.length) l)[n-k.length] = 0 := by
 
-        have: (addLeadingZeros (n - l.length) l)[n-k.length] = (List.replicate (n - l.length) 0)[n - k.length]'(by simp[*]) := by
-          simp only [addLeadingZeros]
+        have: (addZeroes (n - l.length) l)[n-k.length] = (List.replicate (n - l.length) 0)[n - k.length]'(by simp[*]) := by
+          simp only [addZeroes]
           rw[List.getElem_append_left]
 
         rw[this]
@@ -296,18 +296,18 @@ theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxL
 
         exact this
 
-      have addk : (addLeadingZeros (n - k.length) k)[n-k.length] ≠  0 := by
-        simp[addLeadingZeros]
+      have addk : (addZeroes (n - k.length) k)[n-k.length] ≠  0 := by
+        simp[addZeroes]
         rw[List.getElem_append_right]
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hk
         . simp[*]
         . simp[*]
-      simp_all
+      simp_all only [ne_eq, ge_iff_le, not_true_eq_false]
 
-    . have addk : (addLeadingZeros (n - k.length) k)[n-l.length] = 0 := by
-        have: (addLeadingZeros (n - k.length) k)[n-l.length] = (List.replicate (n - k.length) 0)[n - l.length]'(by simp[*]) := by
-          simp only [addLeadingZeros]
+    . have addk : (addZeroes (n - k.length) k)[n-l.length] = 0 := by
+        have: (addZeroes (n - k.length) k)[n-l.length] = (List.replicate (n - k.length) 0)[n - l.length]'(by simp[*]) := by
+          simp only [addZeroes]
           rw[List.getElem_append_left]
 
         rw[this]
@@ -317,8 +317,8 @@ theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxL
 
         exact this
 
-      have addl : (addLeadingZeros (n - l.length) l)[n-l.length] ≠  0 := by
-        simp[addLeadingZeros]
+      have addl : (addZeroes (n - l.length) l)[n-l.length] ≠  0 := by
+        simp only [addZeroes, ne_eq]
         rw[List.getElem_append_right]
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hl
@@ -327,7 +327,7 @@ theorem eq_if_addLeadingZerosEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxL
 
       simp_all only [ge_iff_le, ne_eq]
   rw[← hL] at h
-  simp only [addLeadingZeros, List.append_cancel_left_eq] at h
+  simp only [addZeroes, List.append_cancel_left_eq] at h
   exact h
 
 
@@ -336,7 +336,7 @@ theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
   intro h
   apply equal_if_mapToBaseEq
   by_cases hm: m = 0
-  . simp only [stretchLen, addLeadingZeros, maxLen, toBase, hm, Nat.digits_zero, List.reverse_nil,
+  . simp only [stretchLen, addZeroes, maxLen, toBase, hm, Nat.digits_zero, List.reverse_nil,
     List.length_nil, List.length_reverse, zero_le, max_eq_left, max_eq_right, mapToBase,
     List.map_cons, List.map_nil, tsub_zero, List.append_nil, le_refl, tsub_eq_zero_of_le,
     List.replicate_zero, List.nil_append, List.getElem_cons_zero, List.getElem_cons_succ] at h
@@ -365,7 +365,7 @@ theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
       rw[hbn] at hPos
       contradiction
 
-  apply eq_if_addLeadingZerosEq_nonzero (maxLen (mapToBase b [m, n]))
+  apply eq_if_addZeroesEq_nonzero (maxLen (mapToBase b [m, n]))
   . simp only [ge_iff_le]
     rfl
   . simp only [mapToBase, List.map_cons, List.map_nil, List.getElem_cons_zero, ne_eq]
@@ -378,7 +378,7 @@ theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
     by_cases hn: n = 0
     . --simp[toBase, hn]
       --intro h
-      simp[stretchLen, mapToBase, toBase, hn, maxLen, addLeadingZeros] at h
+      simp[stretchLen, mapToBase, toBase, hn, maxLen, addZeroes] at h
       have hbm: ∀x ∈ (b.digits m).reverse, x = 0 := by
         intro x hx
         rw[h] at hx
@@ -404,7 +404,7 @@ theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
       exact hb
       exact Nat.zero_lt_of_ne_zero hn
       . by_cases hn: n = 0
-        . simp only [stretchLen, addLeadingZeros, maxLen, toBase, List.length_reverse, hn,
+        . simp only [stretchLen, addZeroes, maxLen, toBase, List.length_reverse, hn,
           Nat.digits_zero, List.reverse_nil, List.length_nil, max_self, zero_le, max_eq_left,
           mapToBase, List.map_cons, List.map_nil, le_refl, tsub_eq_zero_of_le, List.replicate_zero,
           List.nil_append, tsub_zero, List.append_nil, List.getElem_cons_zero,
