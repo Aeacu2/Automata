@@ -24,7 +24,7 @@ def project (m : Fin (n+1)) (dfa : DFA (Fin (n+1) → Fin (b+2)) state) [Decidab
   transition :=
   fun a q => ⟨(List.map (fun (x : Fin (b+2)) => dfa.transition (recover m x a) q)
     (FinEnum.toList (Fin (b+2)))).dedup, by apply List.nodup_dedup⟩
-  start := ⟨[dfa.start], by exact List.nodup_singleton dfa.start⟩
+  start := ⟨[dfa.start], List.nodup_singleton dfa.start⟩
   output := dfa.output
 }
 
