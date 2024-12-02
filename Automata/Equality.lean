@@ -3,6 +3,7 @@ import Mathlib.Data.List.Basic
 import Automata.DFA
 import Automata.NFA
 import Automata.Input
+import Automata.Boolean
 import Mathlib.Data.Nat.Digits
 
 -- The standard equality checking automata
@@ -14,7 +15,6 @@ def eqBase (k: ℕ) : DFA (Fin 2 → Fin k) (Fin 2) := {
   start := 0
   output := fun x => x == 0
 }
-
 
 -- The equality checking automata for two numbers in a long list of inputs.
 def eqBase' (k: ℕ) (a b n : ℕ) (ha: a < n) (hb: b < n): DFA (Fin n → Fin k) (Fin 2) := {
@@ -135,7 +135,6 @@ theorem eqBase_iff_eqInput (b : ℕ) (input: List (Fin 2 → Fin b)):
   . apply eqBase_if_equal_aux b input
 
 -- Start of step 2, left to right
-#check List.getElem_tail
 -- theorem tailIndex (l: List α) :
 --   ∀ i,∀ (hi: i + 1 < l.length), l.tail[i]'(by
 --     simp only [List.length_tail]; omega
@@ -213,7 +212,7 @@ theorem eqInput_if_equal (m n b : ℕ) (hb : b ≥ 2) :
       simp only [stretchLenLen_aux, mapLen]
     have stretchLenEq: (stretchLen (mapToBase b [m, n]))[0] =
     (stretchLen (mapToBase b [m, n]))[1] := by
-      simp only [stretchLen, List.map, List.getElem_cons_zero, List.getElem_cons_succ, h]
+      simp [stretchLen, mapToBase, h]
 
     have indexValid0 : 0 < (stretchLen (mapToBase b [m, n])).length := by
       simp [stretchLenLen]
@@ -285,7 +284,7 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (k l: List ℕ) (hn: n ≥ maxLen [k,
     rcases hLen with (hLen | hLen)
     . have addl : (addZeroes (n - l.length) l)[n-k.length] = 0 := by
 
-        have: (addZeroes (n - l.length) l)[n-k.length] = (List.replicate (n - l.length) 0)[n - k.length]'(by simp[*]) := by
+        have: (addZeroes (n - l.length) l)[n - k.length] = (List.replicate (n - l.length) 0)[n - k.length]'(by simp[*]) := by
           simp only [addZeroes]
           rw[List.getElem_append_left]
 
@@ -417,11 +416,7 @@ theorem eq_if_stretchLenEq (m n b: ℕ) (hb: b ≥ 2) :
           have: m > 0 := by exact Nat.zero_lt_of_ne_zero hm
           have hPos := toBase_lead_nonzero b m hb this
           specialize hbm ((toBase b m)[0]'(by
-            simp[toBase, Nat.digits]
-            split <;> try simp at hb
-            rw[Nat.digitsAux.eq_def]
-            split <;> try simp at hm
-            simp
+            apply toBase_len_nonzero <;> assumption
           ))
           simp only [toBase, List.getElem_reverse, tsub_zero, List.mem_reverse] at hbm
           have hyp : (b.digits m)[(b.digits m).length - 1]'(by simp[*])
@@ -522,7 +517,11 @@ theorem equal_if_eqInput (m n b : ℕ) (hb : b ≥ 2) :
         exact this mem1
       apply List.ext_getElem
       . simp only [len0, len1]
-      . aesop
+      .-- aesop
+        intro n_1 h₁ _
+        simp_all only [List.length_nil, Nat.reduceAdd, Fin.isValue]
+        apply inter
+        simp_all only [Fin.isValue]
 
 --statement of Step 2
 theorem eqInput_iff_equal (m n b : ℕ) (hb : b > 1):

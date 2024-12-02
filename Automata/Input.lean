@@ -60,14 +60,16 @@ theorem digits_end_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
     rw[← this]
     exact hn
 
-theorem toBase_lead_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
-  (toBase b n)[0]'(by
-  simp[toBase, Nat.digits]
+theorem toBase_len_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
+  0 < (toBase b n).length := by
+  simp only [toBase, Nat.digits, List.length_reverse]
   split <;> try simp at hb
   rw[Nat.digitsAux.eq_def]
   split <;> try simp at hn
   simp
-  ) > 0 := by
+
+theorem toBase_lead_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
+  (toBase b n)[0]'(by apply toBase_len_nonzero<;> assumption) > 0 := by
   simp[toBase]
   exact digits_end_nonzero b n hb hn
 
@@ -93,7 +95,7 @@ theorem ofBase_toBase (b: ℕ) (n: ℕ) : ofBase b (toBase b n) = n := by
 def addZeroes (n: ℕ) (l: List ℕ): List ℕ :=
   (List.replicate n 0) ++ l
 
-theorem addZeroes_elem (n: ℕ) (l: List ℕ) :
+theorem addZeroes_elem :
   x ∈ (addZeroes n l) → x = 0 ∨ x ∈ l := by
   intro h
   simp only [addZeroes, List.mem_append, List.replicate] at h
@@ -133,7 +135,7 @@ theorem cons_lt_maxLen (l: List α) (ls: List (List α)) :
   | cons head tail _ =>
     simp [maxLen]
 
-theorem len_lt_maxLen (l: List α) (ls: List (List α)) :
+theorem len_le_maxLen (l: List α) (ls: List (List α)) :
   l ∈ ls → l.length ≤ maxLen ls := by
   intro h
   induction ls generalizing l with
@@ -173,7 +175,7 @@ theorem stretchLen_uniform (ls: List (List ℕ)) :
   simp only [stretchLen, List.mem_map] at h
   rcases h with ⟨x, hx, rfl⟩
   simp only [addZeroesLength]
-  have: x.length ≤ maxLen ls := len_lt_maxLen x ls hx
+  have: x.length ≤ maxLen ls := len_le_maxLen x ls hx
   omega
 
 theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (l: List ℕ) (hb: b > 1) :
@@ -181,7 +183,7 @@ theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (l: List ℕ) (hb: b > 1) :
   intro x hx y hy
   simp only [stretchLen, List.mem_map] at hx
   rcases hx with ⟨z, left, rfl⟩
-  have h := addZeroes_elem (maxLen (mapToBase b l) - z.length) z hy
+  have h := addZeroes_elem hy
   rcases h with (rfl | h)
   . omega
   apply mapToBase_lt_base
@@ -189,8 +191,6 @@ theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (l: List ℕ) (hb: b > 1) :
   . simp only [addZeroes, List.replicate] at hy
     exact left
   . exact h
-
-
 
 theorem zipTailHlb (lss: List (List ℕ))
 (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b): ∀ x ∈ List.map (fun ls ↦ ls.tail) lss, ∀ y ∈ x, y < b := by
@@ -264,6 +264,35 @@ def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
         (by apply zipTailHlss; exact hlss)
         (by apply zipTailHls; exact hls))
 
+def zipToAlphabetByFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
+(hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
+(hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → Fin b) :=
+  match n with
+  | 0 => []
+  | m+1 =>
+     (fun i =>
+      -- prove index valid
+       have : 0 < lss[i].length := by
+         rw[hls]
+         omega
+         refine List.mem_iff_get.mpr ?_
+         subst hlss
+         use i
+         rfl
+
+       ⟨lss[i][0], (by
+       -- giving Fin b proof
+          apply hlb lss[i]
+          . apply List.mem_iff_getElem.mpr
+            simp only [Fin.getElem_fin, hlss]
+            use i, i.isLt
+          . apply List.mem_iff_getElem.mpr
+            use 0, this)⟩
+        ) :: (zipToAlphabetFin m l (lss.map (fun ls => ls.tail))
+        (by apply zipTailHlb; exact hlb)
+        (by apply zipTailHlss; exact hlss)
+        (by apply zipTailHls; exact hls))
+
 theorem zipToAlphabetFin_length (n : ℕ) (l : ℕ) (lss: List (List ℕ))
 (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
 (hls : ∀ ls ∈ lss, ls.length = n) :
@@ -275,17 +304,19 @@ theorem zipToAlphabetFin_length (n : ℕ) (l : ℕ) (lss: List (List ℕ))
     simp only [zipToAlphabetFin, add_left_inj, List.length_cons]
     apply ih
 
-def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) : List (Fin l.length → Fin b) :=
+def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) (hm : l.length = m) : List (Fin m → Fin b) :=
   let ls := mapToBase b l
   let n := maxLen ls
   let lss := stretchLen (ls)
-  zipToAlphabetFin n l.length lss (by
+  zipToAlphabetFin n m lss (by
     apply stretchLen_of_mapToBase_lt_base
     exact hb
-  ) (by simp only [mapToBase_length b l, stretchLen_length ls]) (by
+  ) (by simp only [mapToBase_length b l, stretchLen_length ls]; exact hm) (by
     intro ls hls
     apply stretchLen_uniform
     assumption)
+
+
 
 
 /- USELESS CODES

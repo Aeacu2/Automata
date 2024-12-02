@@ -50,25 +50,3 @@ theorem NFA.toDFA_evalFrom (nfa : NFA α state) (x : List α) (qs: ListND state)
 
 theorem NFA.toDFA_eval (nfa : NFA α state) (s : List α) [DecidableEq state]
   : (nfa.toDFA).eval s = nfa.eval s := NFA.toDFA_evalFrom nfa s nfa.start
-
-
-theorem NFA.pumping_lemma_evalFrom [Fintype state] [DecidableEq state] {nfa : NFA α state} {x : List α} {qs : ListND state}(hx : nfa.evalFrom x qs)(hlen : Fintype.card (ListND state) ≤ x.length) :
-    ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card (ListND state) ∧ b ≠ []
-      ∧ ∀ y ∈ ({a} * {b}∗ * {c} : Language α), nfa.evalFrom y qs := by
-  rw [← toDFA_evalFrom] at hx
-  obtain ⟨a, b, c, hxabc, hablen, hne, hy⟩ := nfa.toDFA.pumping_lemma_evalFrom hx hlen
-  use a, b, c
-  constructor
-  . exact hxabc
-  constructor
-  . exact hablen
-  constructor
-  . exact hne
-  intro y h
-  specialize hy y h
-  rwa [← toDFA_evalFrom nfa y qs]
-
-theorem NFA.pumping_lemma_eval [Fintype state] [DecidableEq state] {nfa : NFA α state} {x : List α}(hx : nfa.eval x)(hlen : Fintype.card (ListND state) ≤ x.length) :
-    ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card (ListND state) ∧ b ≠ []
-      ∧ ∀ y ∈ ({a} * {b}∗ * {c} : Language α), nfa.eval y := by
-  exact pumping_lemma_evalFrom hx hlen

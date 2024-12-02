@@ -14,45 +14,24 @@ Replicate, Projection
 Fin
 -/
 
-def Fin.func_res (f: Fin (n + 1) → α) : Fin n → α :=
-  fun i => f i
-
-def Fin.func_move (f: Fin (n+1) → α) : Fin n → α :=
-  fun i => f (i+1)
-
-def DFAO.transFrom' (dfa : DFAO α state out) (x : Fin n → α) (s : state) : state :=
-  match n with
-    | 0 => s
-    | i+1 => dfa.transition (x i) (dfa.transFrom' (Fin.func_res x) s)
 
 def DFAO.transFrom'' (dfa : DFAO α state out) (x : Fin n → α) (s : state) : state :=
   match n with
     | 0 => s
-    | _ + 1 => dfa.transFrom'' (Fin.func_move x) (dfa.transition (x 0) s)
-
-def DFAO.evalFrom' (dfa : DFAO α state out) (x : Fin n → α) (q : state) : out := dfa.output (dfa.transFrom' x q)
+    | _ + 1 => dfa.transFrom'' (Fin.tail x) (dfa.transition (x 0) s)
 
 def DFAO.evalFrom'' (dfa : DFAO α state out) (x : Fin n → α) (q : state) : out := dfa.output (dfa.transFrom'' x q)
 
-def DFAO.eval' (dfa : DFAO α state out) (x : Fin n → α) : out := dfa.evalFrom' x dfa.start
-
 def DFAO.eval'' (dfa : DFAO α state out) (x : Fin n → α) : out := dfa.evalFrom'' x dfa.start
-
-def NFA.transFrom' (nfa : NFA α state) (x : Fin n → α) (qs : ListND state) [DecidableEq state] : ListND state :=
-  match n with
-    | 0 => qs
-    | i+1 => nfa.transList (x i) (NFA.transFrom' nfa (Fin.func_res x) qs)
 
 def NFA.transFrom'' (nfa : NFA α state) (x : Fin n → α) (qs : ListND state) [DecidableEq state] : ListND state :=
   match n with
     | 0 => qs
-    | _ + 1 => nfa.transFrom'' (Fin.func_move x) (nfa.transList (x 0) qs)
+    | _ + 1 => nfa.transFrom'' (Fin.tail x) (nfa.transList (x 0) qs)
 
-def NFA.evalFrom' (nfa : NFA α state) (x : Fin n → α) (qs : ListND state) [DecidableEq state] : Bool := (nfa.transFrom' x qs).val.any nfa.output
 
 def NFA.evalFrom'' (nfa : NFA α state) (x : Fin n → α) (qs : ListND state) [DecidableEq state] : Bool := (nfa.transFrom'' x qs).val.any nfa.output
 
-def NFA.eval' (nfa : NFA α state) (x : Fin n → α) [DecidableEq state]: Bool := nfa.evalFrom' x nfa.start
 
 def NFA.eval'' (nfa : NFA α state) (x : Fin n → α) [DecidableEq state]: Bool := nfa.evalFrom'' x nfa.start
 
@@ -107,24 +86,7 @@ def toInputList (f: Fin m → Fin n → Fin b) : List (Fin n → Fin b) :=
 
 set_option trace.profiler true
 
-def l' := (toInputList (toInputFin 2 [10^100, 10000] (by exact Nat.one_lt_two)))
-
-#eval l'
-
-def l := inputToBase 2 (by exact Nat.one_lt_two) [10^100, 10000]
-
-#eval l
-
-#eval (project 2 (addBase 2)).toDFA.eval' (toInputFin 2 [10^100, 10000] (by exact Nat.one_lt_two))
-
-#eval (project 2 (addBase 2)).toDFA.eval (inputToBase 2 (by exact Nat.one_lt_two) [10^100, 10000])
-
-#eval (project 2 (addBase 2)).toDFA.eval'' (toInputFin 2 [10^100, 10000] (by exact Nat.one_lt_two))
-
-#eval (project 2 (addBase 2)).toDFA.eval l
-
-#eval (project 2 (addBase 2)).toDFA.eval l'
-
-#eval l
+#eval (project 2 (addBase 2)).toDFA.eval'' (toInputFin 2 [10, 10000] (by exact Nat.one_lt_two))
 
 
+#eval (project 2 (addBase 2)).toDFA.eval (inputToBase 2 (by exact Nat.one_lt_two) [10, 10000])
