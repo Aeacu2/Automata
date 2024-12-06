@@ -1,8 +1,7 @@
 import Mathlib.Tactic
 import Automata.DFA
 import Automata.Input
-import Automata.Vector
-import Automata.Equality_Gen
+import Automata.Equality
 
 /-
 1. General Equality
@@ -130,6 +129,3 @@ theorem collapse_correct (dfa : DFA (Fin (n + 1) → Fin (b + 2)) state) (l : Li
     simp_all only
     rfl
   . exact hik
-
-
-#check @dcast

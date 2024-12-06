@@ -6,10 +6,10 @@ import Automata.DFA
 import Automata.NFA
 import Automata.Pumping
 import Automata.Input
-import Automata.Addition
-import Automata.Replicate
+import Automata.LeadingZeroes
+
 import Automata.Collapse
-import Automata.Vector
+
 
 
 -- Auxilliary theorems for recover
@@ -34,47 +34,6 @@ def project (m : Fin (n+1)) (dfa : DFA (Fin (n+1) → Fin (b+2)) state) [Decidab
 
 theorem project_accept [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : dfa.eval (l.map (recover_value m x)) → (project m dfa).eval l := by
   sorry
-
-#eval [(fun _ => 0 : Fin 2 → Fin (0 + 2)), fun _ => 1]
--- Problem: exists x, 1 + 1 = x?
-#eval (project 2 (addBase 2)).eval [fun _ => 1]
--- Fix:
-#eval (project 2 (addBase 2)).eval [fun _ => 0, fun _ => 1]
-
-#eval (project 2 (addBase 2)).eval (inputToBase 2 (by omega) [100000, 10000])
-
--- Exists x, y + x = x?
-#eval (project 1 (collapse 2 1 (addBase 2))).eval (inputToBase 2 (by omega) [100000])
-
-#eval (project 1 (collapse 2 1 (addBase 2))).eval (inputToBase 2 (by omega) [10])
-
--- Exists x, x + x = x?
-#eval (project 0 (collapse 1 0 (collapse 2 1 (addBase 2)))).eval (inputToBase 2 (by omega) [])
-
-def padZeroes (m : ℕ) (x : List (Fin n → Fin (b+2))) : List (Fin n → Fin (b+2)) :=
-  List.replicate m (fun _ => 0) ++ x
-
-theorem padZeroes_add (a b : ℕ) (x : List (Fin n → Fin (k+2))) : padZeroes a (padZeroes b x) = padZeroes (a + b) x := by
-  simp only [padZeroes]
-  rw[← List.append_assoc, List.replicate_append_add]
-
-theorem padZeroes_length (m : ℕ) (x : List (Fin n → Fin (b+2))) : (padZeroes m x).length = m + x.length := by
-  simp only [padZeroes]
-  rw[List.replicate_append_length]
-
-theorem padZeroes_zero (m i: ℕ) (x : List (Fin n → Fin (b+2))) (h : i < m) : (padZeroes m x)[i]'(by simp only [padZeroes, List.length_append, List.length_replicate]; omega) = fun _ => 0 := by
-  simp only [padZeroes]
-  rwa[List.getElem_of_replicate_append_left]
-
-theorem padZeroes_diff (a b: ℕ) (x y : List (Fin n → Fin (k+2))) (hab : a ≤ b) (h: (padZeroes a x) = (padZeroes b y)) : x = padZeroes (b - a) y := by
-  simp only [padZeroes] at *
-  apply List.eq_diff_of_replicate_append_eq
-  . exact h
-  . exact hab
-
-def DFA.acceptZero (dfa : DFA (Fin n → Fin (b+2)) state) : Prop := ∀ (x : List (Fin n → Fin (b+2))), dfa.eval x → (∀ m, dfa.eval (padZeroes m x))
-
-def NFA.acceptZero [DecidableEq state] (nfa : NFA (Fin n → Fin (b+2)) state) : Prop := ∀ (x : List (Fin n → Fin (b+2))), nfa.eval x → (∀ m, nfa.eval (padZeroes m x))
 
 theorem project_acceptZero [DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (h: DFA.acceptZero dfa) (m : Fin (n + 1)) : NFA.acceptZero (project m dfa) := by
   simp only [DFA.acceptZero, NFA.acceptZero] at *
@@ -207,5 +166,5 @@ theorem NFA.bounded_accept [Fintype state] [DecidableEq state] (nfa : NFA (Fin n
   · exact right
 
 theorem project_correct [Fintype state] [DecidableEq state] (l : List ℕ) (m : Fin (l.length + 1)) (dfa : DFA (Fin (l.length +1) → Fin (b+2)) state) (h: dfa.acceptZero):
-  ∃ (x : ℕ), dfa.eval (dcast (by congr; apply List.length_insertNth; exact Fin.is_le m) (inputToBase (b+2) (by omega) (l.insertNth m x))) ↔ (project m dfa).eval (padZeroes (Fintype.card (ListND state)) (inputToBase (b+2) (by omega) l)):= by
+  ∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by sorry)) ↔ (project m dfa).eval (padZeroes (Fintype.card (ListND state)) (inputToBase (b+2) (by omega) l (by sorry))):= by
   sorry
