@@ -10,5 +10,5 @@ ITP project 2 :
 5. LeadingZeros.lean: Deal with leading zero issues for automata: defined properties respectZero and acceptZero for DFA and NFA, proved lemmas, and that the equality automation respects zero. Bounded acceptance theorem for DFAO, DFA, and NFA are proven from the pumping lemmas, which are crucial to fix leading zero issues for projection
 6. NFA.lean: Important transList_subList and transFrom_subList theorems
 7. Projection.lean: ListND type to synthesizing Finset state for the NFA pumping lemma. Proved that projection behaves as expected on general inputs (projection_transFrom, projection_evalFrom, projection_eval)
-8. Collapse.lean: Implemented the collapse operation to simply automata and make projection easier. Proved that it behaves as expected on general inputs (collapse_transFrom, collapse_evalFrom, collapse_eval). Moreover, proved that it is correct for natural number inputs.
+8. Collapse.lean: Implemented the collapse operation to simplify automata and make projection easier. Proved that it behaves as expected on general inputs (collapse_transFrom, collapse_evalFrom, collapse_eval). Moreover, proved that it is correct for natural number inputs.
 9. Minor reorganization in Input.lean and Boolean.lean.
