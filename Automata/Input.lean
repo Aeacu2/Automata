@@ -316,9 +316,6 @@ def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) (hm : l.length = m) : List (
     apply stretchLen_uniform
     assumption)
 
-
-
-
 /- USELESS CODES
 def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=
   (Nat.digits b n).attach.map (fun x => ⟨x.1, Nat.digits_lt_base h x.2⟩)

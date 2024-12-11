@@ -4,8 +4,6 @@ import Automata.DFA
 import Mathlib.Data.List.Defs
 import Mathlib.Data.FinEnum
 
-open Computability
-
 -- A type for Lists with no duplicates, for synthesizing [Fintype ListND] state from [Fintype state]
 abbrev ListND (α : Type) := {l : List α // l.Nodup}
 
@@ -17,10 +15,37 @@ structure NFA (α state : Type) :=
 def NFA.transList (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ListND state :=
   ⟨(qs.val.bind fun q => nfa.transition a q).dedup, (by apply List.nodup_dedup)⟩
 
+theorem NFA.transList_sublist (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ps.val ⊆ qs.val → (nfa.transList a ps).val ⊆ (nfa.transList a qs) := by
+  simp only [transList]
+  intro h p hp
+  -- aesop
+  simp_all only [List.mem_dedup, List.mem_bind]
+  obtain ⟨val, property⟩ := ps
+  obtain ⟨val_1, property_1⟩ := qs
+  obtain ⟨w, h_1⟩ := hp
+  obtain ⟨left, right⟩ := h_1
+  simp_all only
+  apply Exists.intro
+  · apply And.intro
+    apply h
+    on_goal 2 => {exact right
+    }
+    simp_all only
+
 def NFA.transFrom (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : ListND state :=
   match s with
     | [] => qs
     | a::as => NFA.transFrom nfa as (NFA.transList nfa a qs)
+
+theorem NFA.transFrom_sublist (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : ps.val ⊆ qs.val → (nfa.transFrom s ps).val ⊆ (nfa.transFrom s qs).val := by
+  induction s generalizing ps qs
+  case nil =>
+    simp[NFA.transFrom]
+  case cons a as ih =>
+    simp[NFA.transFrom]
+    intro h
+    specialize ih (ps := (nfa.transList a ps)) (qs := (nfa.transList a qs))
+    exact ih (by apply NFA.transList_sublist; exact h)
 
 def NFA.evalFrom (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : Bool :=
   (nfa.transFrom s qs).val.any nfa.output
