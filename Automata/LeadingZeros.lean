@@ -214,6 +214,11 @@ theorem NFA.bounded_accept [Fintype state] [DecidableEq state] (nfa : NFA (Fin n
   · rfl
   · exact right
 
+def NFA.fixLeadingZeros [Fintype state] [DecidableEq state] (nfa : NFA (Fin n → Fin (b+2)) state) : NFA (Fin n → Fin (b+2)) state := {
+  transition := nfa.transition
+  start := nfa.transFrom (padZeroes (Fintype.card (ListND state)) []) nfa.start
+  output := nfa.output
+}
 
 
 -- Legacy

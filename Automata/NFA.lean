@@ -15,6 +15,9 @@ structure NFA (α state : Type) :=
 def NFA.transList (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ListND state :=
   ⟨(qs.val.bind fun q => nfa.transition a q).dedup, (by apply List.nodup_dedup)⟩
 
+theorem NFA.transList_backtrack (nfa : NFA α state) (a : α) (p : state) (states : ListND state) [DecidableEq state] : p ∈ (nfa.transList a states).val → ∃ q ∈ states.val, p ∈ (nfa.transition a q).val := by
+  simp only [transList, List.mem_dedup, List.mem_bind, imp_self]
+
 theorem NFA.transList_sublist (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ps.val ⊆ qs.val → (nfa.transList a ps).val ⊆ (nfa.transList a qs) := by
   simp only [transList]
   intro h p hp

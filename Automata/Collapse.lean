@@ -56,7 +56,7 @@ theorem collapse_correct (dfa : DFA (Fin (n + 1) → Fin (b + 2)) state) (l : Li
   dsimp only [Function.comp_apply]
   -- rw[recover_remove]
   rw[recover_index, insert_remove]
-  rw[remove_index, Fin.succAbove, Fin.castSucc, Fin.castAdd, Fin.castLE]
+  rw[remove_index, Fin.removeNth, Fin.succAbove, Fin.castSucc, Fin.castAdd, Fin.castLE]
   split;
   specialize this v hv
   .
@@ -65,7 +65,6 @@ theorem collapse_correct (dfa : DFA (Fin (n + 1) → Fin (b + 2)) state) (l : Li
     simp_all only
   . rename_i h
     have : ¬ k.val < i := by
-      -- AESOP failed
       apply h
     simp_all only [Fin.getElem_fin, gt_iff_lt]
 

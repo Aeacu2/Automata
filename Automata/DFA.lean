@@ -40,4 +40,3 @@ def DFAO.toDFA_eval (dfao : DFAO α state out)
   (o: out) (s : List α) [BEq out] :
     (dfao.toDFA o).eval s = (dfao.eval s == o) := by
   exact DFAO.toDFA_evalFrom dfao o s dfao.start
-
