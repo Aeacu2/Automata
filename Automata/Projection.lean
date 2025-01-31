@@ -124,8 +124,7 @@ theorem project_eval [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) s
   specialize h h₁
   rcases h with ⟨p, h₂, l', h₄⟩
   simp[project] at h₂
-
-  aesop?
+  aesop
 
 theorem project_eval_iff [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : (project m dfa).eval l ↔ ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (remove_index m) ∧ dfa.eval l₁ := by
   constructor
@@ -146,11 +145,11 @@ theorem project_acceptZero [DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (
   specialize h l₁ h₄
   intro k
   specialize h k
-  have h₅ := project_eval_iff dfa m (padZeroes k l)
+  have h₅ := project_eval_iff dfa m (padZeros k l)
   apply h₅.mpr
-  use (padZeroes k l₁)
+  use (padZeros k l₁)
   constructor
-  . simp only [padZeroes, List.map_append, List.map_replicate]
+  . simp only [padZeros, List.map_append, List.map_replicate]
     have: List.replicate k (remove_index m (fun _ ↦ 0 : Fin (n+1) → Fin (b+2))) ++ List.map (remove_index m) l₁ = List.replicate k (fun _ ↦ 0) ++ List.map (remove_index m) l₁ := by
       simp only [List.append_cancel_right_eq, List.replicate_inj, true_and]
       right
@@ -160,12 +159,62 @@ theorem project_acceptZero [DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (
     simp only [h₃, this]
   . exact h
 
+theorem project_fix_acceptZero [Fintype state][DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (h: dfa.acceptZero) : (project m dfa).fixLeadingZeros.acceptZero := by
+  have: (project m dfa).acceptZero := project_acceptZero dfa h m
+  exact NFA.fixLeadingZeroes.acceptZero (project m dfa) this
+
 theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (h: dfa.respectZero) : (project m dfa).fixLeadingZeros.respectZero := by
+  rw[NFA.respectZero]
+  intro l k
+  constructor
+  . have := project_fix_acceptZero dfa
+    have dfa_zero := dfa.acceptZero_of_respectZero h
+    have := this m dfa_zero
+    rw[NFA.acceptZero] at this
+    intro a
+    simp_all only [true_implies]
+  . intro h'
+    rw[NFA.fixLeadingZeros_eval, padZeros_add] at h'
+    have dfa_zero := dfa.acceptZero_of_respectZero h
+    have := project_acceptZero dfa dfa_zero m
+    have := (project m dfa).bounded_accept l this (padZeros (Fintype.card (ListND state) + k) l)
+    rw[NFA.fixLeadingZeros_eval]
+    apply this
+    constructor
+    . use (Fintype.card (ListND state) + k)
+    . exact h'
+
+theorem list_project (x b : ℕ) (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) : ∃ k, (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
+      simp_rw[← hl]
+      apply List.length_insertNth
+      omega
+    ))) = padZeros k (inputToBase (b+2) (by norm_num) l (by omega)) := by
+  simp[inputToBase]
   sorry
 
-theorem project_correct [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len +1) → Fin (b+2)) state) (h: dfa.acceptZero):
-  ∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega)) ↔ (project m dfa).eval (padZeroes (Fintype.card (ListND state)) (inputToBase (b+2) (by omega) l hl)):= by
-  sorry
+theorem project_correct [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len+1) → Fin (b+2)) state) (hres: dfa.respectZero):
+  (∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega))) ↔ (project m dfa).fixLeadingZeros.eval (inputToBase (b+2) (by omega) l hl):= by
+  rw[NFA.fixLeadingZeros_eval]
+  constructor
+  . intro h
+    rcases h with ⟨x, h⟩
+    have := eval_project dfa m (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega)) h
+    have lis := list_project x b l hl m
+    rcases lis with ⟨k, h₁⟩
+    rw[h₁] at this
+    apply (project m dfa).bounded_accept _
+    . apply project_acceptZero
+      exact DFA.acceptZero_of_respectZero dfa hres
+    swap
+    . exact padZeros k (inputToBase (b+2) (by norm_num) l (by omega))
+    . constructor
+      . use k
+      . exact this
+  . intro h
+    rw[project_eval_iff] at h
+    rcases h with ⟨l₁, hlis, hdfa⟩
+
+    sorry
 
 -- Legacy
 

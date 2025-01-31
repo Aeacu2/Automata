@@ -8,13 +8,13 @@ def DFA.negate (dfa: DFA α state) : DFA α state := {
   output := fun x =>  ! dfa.output x
 }
 
-def DFA.intersection (dfa1 : DFA α state1) (dfa2 : DFA α state2) : DFA (α ) (state1 × state2) := {
+def DFA.intersection (dfa1 : DFA α state1) (dfa2 : DFA α state2) : DFA α (state1 × state2) := {
   transition := fun a q => ⟨dfa1.transition a q.1, dfa2.transition a q.2⟩,
   start := (dfa1.start, dfa2.start),
   output := fun (q1, q2) => dfa1.output q1 && dfa2.output q2
 }
 
-def DFA.union  (dfa1 : DFA α state1) (dfa2 : DFA α state2) : DFA (α) (state1 × state2) := {
+def DFA.union  (dfa1 : DFA α state1) (dfa2 : DFA α state2) : DFA α (state1 × state2) := {
   transition := fun a q => ⟨dfa1.transition a q.1, dfa2.transition a q.2⟩,
   start := (dfa1.start, dfa2.start),
   output := fun (q1, q2) => dfa1.output q1 || dfa2.output q2

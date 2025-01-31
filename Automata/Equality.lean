@@ -451,14 +451,3 @@ theorem eqBase_iff_equal_nat (b : ℕ) (hb: b > 1) (input : List ℕ) (l : ℕ)
 --   apply (eqBase_iff_equal_false 2 (by norm_num) [0, 0] (by norm_num) 0 1).mpr
 
 
-theorem zero_is_zero : 0 = 0 := by
-  apply (eqBase_iff_equal 2 (by norm_num) [0, 0] 2 (by norm_num) 0 1).mpr
-  rfl
-
-theorem zero_is_zero_nat : 0 = 0 := by
-  apply (eqBase_iff_equal_nat 2 (by norm_num) [0, 0] 2 (by norm_num) 0 1 (by norm_num) (by norm_num)).mpr
-  rfl
-
-theorem foo : 100000 = 100000 := by
-  apply (eqBase_iff_equal 2 (by norm_num) [100000, 100000] 2 (by norm_num) 0 1).mpr
-  native_decide

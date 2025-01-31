@@ -40,6 +40,8 @@ def NFA.transFrom (nfa : NFA α state) (s : List α) (qs : ListND state) [Decida
     | [] => qs
     | a::as => NFA.transFrom nfa as (NFA.transList nfa a qs)
 
+theorem NFA.transFrom_nil (nfa : NFA α state) (qs : ListND state) [DecidableEq state] : nfa.transFrom [] qs = qs := by rfl
+
 theorem NFA.transFrom_sublist (nfa : NFA α state) (s : List α) (qs : ListND state) [DecidableEq state] : ps.val ⊆ qs.val → (nfa.transFrom s ps).val ⊆ (nfa.transFrom s qs).val := by
   induction s generalizing ps qs
   case nil =>
