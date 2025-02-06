@@ -5,6 +5,7 @@ import Automata.NFA
 import Automata.Input
 import Automata.Boolean
 import Automata.Replicate
+import Automata.LeadingZeros
 import Mathlib.Data.Nat.Digits
 
 -- The equality checking automata for two numbers in a long list of inputs.
@@ -444,10 +445,48 @@ theorem eqBase_iff_equal_nat (b : ℕ) (hb: b > 1) (input : List ℕ) (l : ℕ)
     apply eqBase_iff_eqInput (a := ⟨m, hm⟩) (b := ⟨n, hn⟩) (b+2) (inputToBase (b+2) (hb) input hl) |>.mp
     exact h
 
+theorem equality_respectZero : (eqBase (b + 2) l m n).respectZero := by
+  rw[DFA.respectZero]
+  intro x c
+  constructor
+  intro h
+  rw[padZeros]
+  rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
+  nth_rw 1 [eqBase]
+  simp only [Fin.isValue, beq_iff_eq]
+  suffices: (DFAO.transFrom (eqBase (b + 2) l m n) (List.replicate c fun _ ↦ 0) (eqBase (b + 2) l m n).start) = 0
+  . rw[this]
+    simp[DFAO.eval, DFAO.evalFrom] at h
+    nth_rw 1 3 [eqBase] at h
+    simp only [Fin.isValue, beq_iff_eq] at h
+    exact h
+  nth_rw 2 [eqBase]
+  simp only [Fin.isValue]
+  apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
+  constructor
+  . rfl
+  . intro f a
+    simp_all only [List.mem_replicate, ne_eq, Fin.val_zero]
+  . intro h
+    contrapose h; simp_all only [Bool.not_eq_true]
+    rw[padZeros]
+    rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
+    nth_rw 1 [eqBase]
+    simp only [Fin.isValue, beq_iff_eq]
+    suffices: (DFAO.transFrom (eqBase (b + 2) l m n) (List.replicate c fun _ ↦ 0) (eqBase (b + 2) l m n).start) = 0
+    . rw[this]
+      simp[DFAO.eval, DFAO.evalFrom] at h
+      nth_rw 1 3 [eqBase] at h
+      simp only [Fin.isValue, beq_iff_eq] at h
+      exact h
+    nth_rw 2 [eqBase]
+    simp only [Fin.isValue]
+    apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
+    simp_all only [Fin.isValue, List.mem_replicate, ne_eq, Fin.val_zero, and_imp, implies_true, and_self]
+
+
 
 -- Demos
 --Failed!!!
 -- theorem zero_is_zero_fail : 0 = 0 := by
 --   apply (eqBase_iff_equal_false 2 (by norm_num) [0, 0] (by norm_num) 0 1).mpr
-
-

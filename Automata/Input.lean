@@ -4,6 +4,7 @@ import Mathlib.Data.List.Lemmas
 import Mathlib.Data.Nat.Digits
 import Init.Data.List.Lemmas
 import Automata.Replicate
+import Automata.LeadingZeros
 
 /-
 Major function: inputToBase
@@ -264,34 +265,34 @@ def zipToAlphabetFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
         (by apply zipTailHlss; exact hlss)
         (by apply zipTailHls; exact hls))
 
-def zipToAlphabetByFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
-(hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
-(hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → Fin b) :=
-  match n with
-  | 0 => []
-  | m+1 =>
-     (fun i =>
-      -- prove index valid
-       have : 0 < lss[i].length := by
-         rw[hls]
-         omega
-         refine List.mem_iff_get.mpr ?_
-         subst hlss
-         use i
-         rfl
+-- def zipToAlphabetByFin (n : ℕ) (l : ℕ) (lss: List (List ℕ))
+-- (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
+-- (hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → Fin b) :=
+--   match n with
+--   | 0 => []
+--   | m+1 =>
+--      (fun i =>
+--       -- prove index valid
+--        have : 0 < lss[i].length := by
+--          rw[hls]
+--          omega
+--          refine List.mem_iff_get.mpr ?_
+--          subst hlss
+--          use i
+--          rfl
 
-       ⟨lss[i][0], (by
-       -- giving Fin b proof
-          apply hlb lss[i]
-          . apply List.mem_iff_getElem.mpr
-            simp only [Fin.getElem_fin, hlss]
-            use i, i.isLt
-          . apply List.mem_iff_getElem.mpr
-            use 0, this)⟩
-        ) :: (zipToAlphabetFin m l (lss.map (fun ls => ls.tail))
-        (by apply zipTailHlb; exact hlb)
-        (by apply zipTailHlss; exact hlss)
-        (by apply zipTailHls; exact hls))
+--        ⟨lss[i][0], (by
+--        -- giving Fin b proof
+--           apply hlb lss[i]
+--           . apply List.mem_iff_getElem.mpr
+--             simp only [Fin.getElem_fin, hlss]
+--             use i, i.isLt
+--           . apply List.mem_iff_getElem.mpr
+--             use 0, this)⟩
+--         ) :: (zipToAlphabetFin m l (lss.map (fun ls => ls.tail))
+--         (by apply zipTailHlb; exact hlb)
+--         (by apply zipTailHlss; exact hlss)
+--         (by apply zipTailHls; exact hls))
 
 theorem zipToAlphabetFin_length (n : ℕ) (l : ℕ) (lss: List (List ℕ))
 (hlb: ∀ x ∈ lss, ∀ y ∈ x, y < b) (hlss: lss.length = l)
@@ -315,6 +316,26 @@ def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) (hm : l.length = m) : List (
     intro ls hls
     apply stretchLen_uniform
     assumption)
+
+def getDigits (lis : List (Fin m → Fin b)) : Fin m → List ℕ :=
+  fun i => List.map (fun f => f i) lis
+
+def reverseInput_aux (b : ℕ) (Digits : Fin m → List ℕ) : Fin m → ℕ :=
+  fun i => ofBase b (Digits i)
+
+def reverseInput (lis : List (Fin m → Fin b)) : List ℕ :=
+  List.ofFn (reverseInput_aux b (getDigits lis))
+
+theorem reverseInput_length (lis : List (Fin m → Fin b)) : (reverseInput lis).length = m := by
+  simp only [reverseInput, List.length_ofFn]
+
+theorem inputToBase_of_reverseInput (lis : List (Fin m → Fin (b + 2))) :
+  ∃ (k : ℕ), lis = padZeros k (inputToBase (b + 2) (by omega) (reverseInput lis) (reverseInput_length lis)) := by
+  sorry
+
+theorem reverseInput_of_inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) (hm : l.length = m) :
+  reverseInput (inputToBase b hb l hm) = l := by
+  sorry
 
 /- USELESS CODES
 def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=

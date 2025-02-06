@@ -2,10 +2,8 @@ import Mathlib.Tactic
 import Automata.DFA
 import Automata.NFA
 import Automata.Boolean
-import Automata.Input
 import Automata.Replicate
 import Automata.Pumping
-import Automata.Equality
 
 def padZeros (m : ℕ) (x : List (Fin n → Fin (b+2))) : List (Fin n → Fin (b+2)) :=
   List.replicate m (fun _ => 0) ++ x
@@ -52,44 +50,44 @@ theorem DFA.intersection_respectZero (dfa1 : DFA (Fin n → Fin (b+2)) state1) (
   specialize h2 x m
   simp_all only [Bool.coe_iff_coe, intersection_eval, Bool.and_eq_true]
 
-theorem equality_respectZero : (eqBase (b + 2) l m n).respectZero := by
-  rw[DFA.respectZero]
-  intro x c
-  constructor
-  intro h
-  rw[padZeros]
-  rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
-  nth_rw 1 [eqBase]
-  simp only [Fin.isValue, beq_iff_eq]
-  suffices: (DFAO.transFrom (eqBase (b + 2) l m n) (List.replicate c fun _ ↦ 0) (eqBase (b + 2) l m n).start) = 0
-  . rw[this]
-    simp[DFAO.eval, DFAO.evalFrom] at h
-    nth_rw 1 3 [eqBase] at h
-    simp only [Fin.isValue, beq_iff_eq] at h
-    exact h
-  nth_rw 2 [eqBase]
-  simp only [Fin.isValue]
-  apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
-  constructor
-  . rfl
-  . intro f a
-    simp_all only [List.mem_replicate, ne_eq, Fin.val_zero]
-  . intro h
-    contrapose h; simp_all only [Bool.not_eq_true]
-    rw[padZeros]
-    rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
-    nth_rw 1 [eqBase]
-    simp only [Fin.isValue, beq_iff_eq]
-    suffices: (DFAO.transFrom (eqBase (b + 2) l m n) (List.replicate c fun _ ↦ 0) (eqBase (b + 2) l m n).start) = 0
-    . rw[this]
-      simp[DFAO.eval, DFAO.evalFrom] at h
-      nth_rw 1 3 [eqBase] at h
-      simp only [Fin.isValue, beq_iff_eq] at h
-      exact h
-    nth_rw 2 [eqBase]
-    simp only [Fin.isValue]
-    apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
-    simp_all only [Fin.isValue, List.mem_replicate, ne_eq, Fin.val_zero, and_imp, implies_true, and_self]
+-- theorem equality_respectZero : (eqBase (b + 2) l m n).respectZero := by
+--   rw[DFA.respectZero]
+--   intro x c
+--   constructor
+--   intro h
+--   rw[padZeros]
+--   rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
+--   nth_rw 1 [eqBase]
+--   simp only [Fin.isValue, beq_iff_eq]
+--   suffices: (DFAO.transFrom (eqBase (b + 2) l m n) (List.replicate c fun _ ↦ 0) (eqBase (b + 2) l m n).start) = 0
+--   . rw[this]
+--     simp[DFAO.eval, DFAO.evalFrom] at h
+--     nth_rw 1 3 [eqBase] at h
+--     simp only [Fin.isValue, beq_iff_eq] at h
+--     exact h
+--   nth_rw 2 [eqBase]
+--   simp only [Fin.isValue]
+--   apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
+--   constructor
+--   . rfl
+--   . intro f a
+--     simp_all only [List.mem_replicate, ne_eq, Fin.val_zero]
+--   . intro h
+--     contrapose h; simp_all only [Bool.not_eq_true]
+--     rw[padZeros]
+--     rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
+--     nth_rw 1 [eqBase]
+--     simp only [Fin.isValue, beq_iff_eq]
+--     suffices: (DFAO.transFrom (eqBase (b + 2) l m n) (List.replicate c fun _ ↦ 0) (eqBase (b + 2) l m n).start) = 0
+--     . rw[this]
+--       simp[DFAO.eval, DFAO.evalFrom] at h
+--       nth_rw 1 3 [eqBase] at h
+--       simp only [Fin.isValue, beq_iff_eq] at h
+--       exact h
+--     nth_rw 2 [eqBase]
+--     simp only [Fin.isValue]
+--     apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
+--     simp_all only [Fin.isValue, List.mem_replicate, ne_eq, Fin.val_zero, and_imp, implies_true, and_self]
 
 def DFA.acceptZero (dfa : DFA (Fin n → Fin (b+2)) state) : Prop := ∀ (x : List (Fin n → Fin (b+2))), (dfa.eval x → ∀ m, dfa.eval (padZeros m x))
 
