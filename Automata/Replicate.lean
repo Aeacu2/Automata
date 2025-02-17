@@ -12,8 +12,7 @@ theorem List.getElem_of_replicate_append_left (x : List α) (h : i < n) : (List.
 theorem List.getElem_of_replicate_append_right (x : List α) (h : i < x.length) : (List.replicate n a ++ x)[i + n]'(by simp only [List.length_append, List.length_replicate]; omega) = x[i]'(by omega) := by
   rw[List.getElem_append_right]
   . simp only [length_replicate, add_tsub_cancel_right]
-  . simp only [length_replicate, add_lt_iff_neg_right, not_lt_zero', not_false_eq_true]
-  . simpa only [length_replicate, add_tsub_cancel_right]
+  . simp only [length_replicate, le_add_iff_nonneg_left, zero_le]
 
 theorem List.replciate_append_elem (n: ℕ) (l: List ℕ) :
   x ∈ ((List.replicate n a) ++ l) → x = a ∨ x ∈ l := by
@@ -37,10 +36,10 @@ theorem List.eq_of_replicate_append_eq {x y : List α} (h : List.replicate n a +
     exact ih h2
 
 theorem List.replicate_append_add (n m : ℕ) (x : List α) : List.replicate n a ++ List.replicate m a ++ x = List.replicate (n + m) a ++ x := by
-  simp only [List.append_replicate_replicate]
+  simp
 
 theorem List.eq_diff_of_replicate_append_eq {x y : List α} (h : List.replicate m a ++ x = List.replicate n a ++ y) (hmn : m ≤ n) : x = List.replicate (n - m) a ++ y := by
   have: n = m + (n - m) := by omega
   rw[this] at h
-  rw[← List.append_replicate_replicate, List.append_assoc] at h
+  rw[← List.replicate_append_replicate, List.append_assoc] at h
   apply List.append_cancel_left h

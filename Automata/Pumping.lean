@@ -14,7 +14,7 @@ theorem DFAO.transFrom_of_append (dfao: DFAO α state out)(start : state) (x y :
     simp only [List.append, DFAO.transFrom]
 
     specialize ih (dfao.transition a start)
-    simp only [List.append_eq, ih]
+    simp[DFAO.transFrom, ih]
 
 theorem NFA.transFrom_of_append [DecidableEq state] (nfa : NFA α state) (start : ListND state) (x y : List α) :
     nfa.transFrom (x ++ y) start = nfa.transFrom y (nfa.transFrom x start) := by
@@ -68,7 +68,7 @@ theorem DFAO.transFrom_of_pow {dfao : DFAO α state out} {x y : List α} {s : st
   · rfl
   · have ha := hS a (List.mem_cons_self _ _)
     rw [Set.mem_singleton_iff] at ha
-    rw [List.join, DFAO.transFrom_of_append, ha, hx]
+    rw [List.flatten, DFAO.transFrom_of_append, ha, hx]
     apply ih
     intro z hz
     exact hS z (List.mem_cons_of_mem a hz)
@@ -113,7 +113,8 @@ theorem DFAO.pumping_lemma_evalFrom [Fintype state] {dfao : DFAO α state out} {
   . intro y hy'
     specialize hy y hy'
     simp only [evalFrom] at hx
-    simp only [evalFrom, hy, hx]
+    simp_all only [evalFrom, hy, hx]
+
 
 theorem DFAO.pumping_lemma_eval [Fintype state] {dfao : DFAO α state out} {x : List α} {o : out} (hx : dfao.eval x = o)(hlen : Fintype.card state ≤ x.length) :
     ∃ a b c, x = a ++ b ++ c ∧ a.length + b.length ≤ Fintype.card state ∧ b ≠ []

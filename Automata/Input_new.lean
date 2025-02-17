@@ -50,7 +50,7 @@ theorem digits_end_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
   have := Nat.digits_of_two_le_of_pos hb this
   specialize ih this
   aesop
-  . simp at hnb
+  . simp only [ne_eq, Decidable.not_not] at hnb
     have: b.digits (n / b) = [] := by
       rw[hnb]
       apply Nat.digits_zero
@@ -93,7 +93,7 @@ theorem ofBase_toBase (b: ℕ) (n: ℕ) : ofBase b (toBase b n) = n := by
   rw [Nat.ofDigits_eq_foldr]
   rfl
 
-theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) (hlen : l.length > 0) (hlead : l[0] > 0) :
+theorem toBase_ofBase' (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) (hlen : l.length > 0) (hlead : l[0] > 0) :
   toBase b (ofBase b l) = l := by
   have := Nat.digits_ofDigits b hb l.reverse
   specialize this (by simp_all)
@@ -101,7 +101,9 @@ theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x <
     intro h
     simp[List.getLast]
     suffices : ¬ l[0] = 0
-    . sorry
+    . convert this
+
+      sorry
     exact Nat.not_eq_zero_of_lt hlead
   )
   rw[toBase, ofBase]
@@ -140,6 +142,10 @@ theorem ofBase_addZeroes (b: ℕ)(n: ℕ) (l: List ℕ) :
   case zero => simp
   case succ n ih =>
     simp [addZeroes, List.replicate, List.foldl, ih]
+
+theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) (hlen : l.length > 0) :
+  ∃ k, addZeroes k (toBase b (ofBase b l)) = l := by
+  sorry
 
 def maxLen : (l: List (List α)) → ℕ
   | [] => 0
@@ -227,7 +233,7 @@ def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hl
        have : 0 < (ls i).length := by
          rw[hls]
          omega
-       ⟨(ls i)[0], by apply hlb; exact List.getElem_mem (ls i) 0 this⟩) :: (zip (fun i => (ls i).tail)
+       ⟨(ls i)[0], by apply hlb; exact List.getElem_mem this⟩) :: (zip (fun i => (ls i).tail)
         (by apply zipTailHlb; exact hlb)
         (by apply zipTailHls; exact hls))
 
@@ -255,10 +261,6 @@ theorem getDigits_of_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i,
   simp only [List.map, zip]
   induction l generalizing ls
   case zero =>
-    have h3: (ls i).tail = [] := by
-        have : (ls i).tail.length = 0 := by
-          exact zipTailHls ls hls i
-        exact List.length_eq_zero.mp this
     simp[zip]
     exact Eq.symm (List.eq_of_length_one (ls i) (hls i))
   case succ l ih =>
@@ -268,8 +270,10 @@ theorem getDigits_of_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i,
     specialize ih (by aesop) (by aesop)
     suffices : List.map (fun f ↦ ↑(f i)) (zip (fun i ↦ (ls i).tail) _ _) = (ls i).tail
     . rw[this]
-      have := @List.cons_head!_tail ℕ (by exact instInhabitedNat) (ls i) (by aesop)
-      sorry
+      have := @List.cons_head?_tail ℕ (ls i)
+      apply this
+      simp [List.getElem_zero]
+      rw [← @List.head?_eq_head]
     simp only [List.map, zip]
     exact ih
 
@@ -294,11 +298,21 @@ theorem toWord_of_toNat (ls : List (Fin m → Fin (b + 2))) :
 theorem toNat_of_toWord (v: Fin m → ℕ) (b: ℕ) :
   toNat (toWord v b) = v := by
   simp[toNat, toNat_aux, getDigits, toWord, zip, stretchLen, addZeroes, mapToBase, toBase]
-  have : (getDigits (zip (stretchLen (mapToBase (b + 2) v)) (stretchLen_of_mapToBase_lt_base (b + 2) v (by omega)) (stretchLen_uniform (mapToBase (b + 2) v))) = mapToBase (b + 2) v) := by
-    -- apply getDigits_of_zip
+  have : (getDigits (zip (stretchLen (mapToBase (b + 2) v)) (stretchLen_of_mapToBase_lt_base (b + 2) v (by omega)) (stretchLen_uniform (mapToBase (b + 2) v))) = stretchLen (mapToBase (b + 2) v)) := by
+
+    have : ∀ (i : Fin m), ∀ x ∈ stretchLen (mapToBase (b + 2) v) i, x < b + 2 := by
+      apply stretchLen_of_mapToBase_lt_base
+      omega
+    let l := maxLenFin (mapToBase (b + 2) v) - 1
+    convert getDigits_of_zip (l := l) (stretchLen (mapToBase (b + 2) v)) this ?_
+
+    -- refine getDigits_of_zip ?_ ?_ ?_
+    sorry
     sorry
   rw[this]
-  exact toNat_aux_of_mapToBase b v
+  -- exact toNat_aux_of_mapToBase b v
+  sorry
+
 
 /- USELESS CODES
 def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=

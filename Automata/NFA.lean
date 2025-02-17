@@ -7,22 +7,22 @@ import Mathlib.Data.FinEnum
 -- A type for Lists with no duplicates, for synthesizing [Fintype ListND] state from [Fintype state]
 abbrev ListND (α : Type) := {l : List α // l.Nodup}
 
-structure NFA (α state : Type) :=
+structure NFA (α state : Type) where
   (transition : α → state → ListND state)
   (start : ListND state)
   (output : state → Bool)
 
 def NFA.transList (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ListND state :=
-  ⟨(qs.val.bind fun q => nfa.transition a q).dedup, (by apply List.nodup_dedup)⟩
+  ⟨(qs.val.flatMap fun q => nfa.transition a q).dedup, (by apply List.nodup_dedup)⟩
 
 theorem NFA.transList_backtrack (nfa : NFA α state) (a : α) (p : state) (states : ListND state) [DecidableEq state] : p ∈ (nfa.transList a states).val → ∃ q ∈ states.val, p ∈ (nfa.transition a q).val := by
-  simp only [transList, List.mem_dedup, List.mem_bind, imp_self]
+  simp only [transList, List.mem_dedup, List.mem_flatMap, imp_self]
 
 theorem NFA.transList_sublist (nfa : NFA α state) (a : α) (qs : ListND state) [DecidableEq state] : ps.val ⊆ qs.val → (nfa.transList a ps).val ⊆ (nfa.transList a qs) := by
   simp only [transList]
   intro h p hp
   -- aesop
-  simp_all only [List.mem_dedup, List.mem_bind]
+  simp_all only [List.mem_dedup, List.mem_flatMap]
   obtain ⟨val, property⟩ := ps
   obtain ⟨val_1, property_1⟩ := qs
   obtain ⟨w, h_1⟩ := hp

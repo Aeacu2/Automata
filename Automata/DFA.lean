@@ -1,6 +1,6 @@
 import Mathlib.Tactic
 
-structure DFAO (α state out: Type):=
+structure DFAO (α state out: Type) where
   (transition : α → state → state)
   (start : state)
   (output : state → out)

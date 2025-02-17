@@ -134,7 +134,10 @@ theorem DFAO.bounded_out [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) stat
 
     have habzero : ∀ i, ∀ (hi: i < a.length + b'.length),  (a ++ b')[i]' (by rw[List.length_append]; exact hi) = fun _ => 0 := by
       intro i hi
-      rw[← List.getElem_append_left (a++b') c]
+      have : i < (a ++ b').length := by
+        rw[List.length_append]
+        exact hi
+      rw[← List.getElem_append_left this]
       trans (padZeros k x)[i]
       congr 1
       . exact hkxabc.symm
@@ -145,16 +148,16 @@ theorem DFAO.bounded_out [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) stat
 
     have hazero : ∀ i, ∀ (hi: i < a.length),  a[i]' (by omega) = fun _ => 0 := by
       intro i hi
-      rw[← List.getElem_append_left a b']
+      rw[← List.getElem_append_left hi]
       apply habzero i
       . omega
     have hbzero : ∀ i, ∀ (hi: i < b'.length),  b'[i]' (by omega) = fun _ => 0 := by
       intro i hi
       -- rw[← List.getElem_append_right' a b'] Why?
       have : (a ++ b')[a.length + i]'(by rw[List.length_append]; omega) = b'[i] := by
-        rw[List.getElem_append_right']
-        simp only [add_tsub_cancel_left]
-        omega
+        nth_rw 2 [List.getElem_append_right' a]
+        congr 1
+        ring
       rw[← this]
       apply habzero (a.length + i)
       omega
@@ -172,7 +175,7 @@ theorem DFAO.bounded_out [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) stat
         exact hbzero n_1 h₁
     have habk : a.length + b'.length < k := by omega
     have hk : (List.replicate k (fun _ => 0)) = (List.replicate (a.length + b'.length) (fun _ => 0)) ++ (List.replicate (k - a.length - b'.length) (fun _ : Fin n => (0 : Fin (b + 2)))) := by
-      simp[List.append_replicate_replicate]
+      simp[List.replicate_append_replicate]
       omega
     have hcx : c = padZeros (k - a.length - b'.length) x := by
       rw[har, hbr] at hkxabc
@@ -189,7 +192,7 @@ theorem DFAO.bounded_out [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) stat
       rw[hcx, har]
       simp only [padZeros, List.length_replicate]
       rw[← List.append_assoc]
-      simp only [List.length_replicate, List.append_replicate_replicate,
+      simp only [List.length_replicate, List.replicate_append_replicate,
         List.append_cancel_right_eq, List.replicate_inj, AddLeftCancelMonoid.add_eq_zero,
         List.length_eq_zero, or_true, and_true]
       omega
@@ -239,10 +242,10 @@ def NFA.fixLeadingZeros [Fintype state] [DecidableEq state] (nfa : NFA (Fin n �
 }
 
 theorem NFA.fixLeadingZeros_transFrom [Fintype state] [DecidableEq state] (nfa : NFA (Fin n → Fin (b+2)) state) (s : List (Fin n → Fin (b+2))): (nfa.fixLeadingZeros).transFrom s nfa.fixLeadingZeros.start = nfa.transFrom (padZeros (Fintype.card (ListND state)) s) nfa.start := by
-  induction s using List.list_reverse_induction
-  case base =>
+  induction s using List.reverseRecOn
+  case nil =>
     simp only [NFA.transFrom, NFA.fixLeadingZeros, padZeros]
-  case ind as a ih =>
+  case append_singleton as a ih =>
     simp[NFA.transFrom_of_append, ih]
     nth_rw 2 [padZeros]
     rw[← List.append_assoc]
