@@ -102,8 +102,7 @@ theorem toBase_ofBase' (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x 
     simp[List.getLast]
     suffices : ¬ l[0] = 0
     . convert this
-
-      sorry
+      apply List.head_eq_getElem l
     exact Nat.not_eq_zero_of_lt hlead
   )
   rw[toBase, ofBase]
