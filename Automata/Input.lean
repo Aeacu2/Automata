@@ -50,7 +50,7 @@ theorem digits_end_nonzero (b: ℕ) (n: ℕ) (hb: b ≥ 2) (hn : n > 0) :
   have := Nat.digits_of_two_le_of_pos hb this
   specialize ih this
   aesop
-  . simp at hnb
+  . simp only [ne_eq, Decidable.not_not] at hnb
     have: b.digits (n / b) = [] := by
       rw[hnb]
       apply Nat.digits_zero
@@ -312,7 +312,11 @@ def inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) (hm : l.length = m) : List (
   zipToAlphabetFin n m lss (by
     apply stretchLen_of_mapToBase_lt_base
     exact hb
-  ) (by simp only [mapToBase_length b l, stretchLen_length ls]; exact hm) (by
+  ) (by
+  simp [lss, stretchLen_length]
+  rw[mapToBase_length]
+  exact hm
+  ) (by
     intro ls hls
     apply stretchLen_uniform
     assumption)
@@ -329,13 +333,7 @@ def reverseInput (lis : List (Fin m → Fin b)) : List ℕ :=
 theorem reverseInput_length (lis : List (Fin m → Fin b)) : (reverseInput lis).length = m := by
   simp only [reverseInput, List.length_ofFn]
 
-theorem inputToBase_of_reverseInput (lis : List (Fin m → Fin (b + 2))) :
-  ∃ (k : ℕ), lis = padZeros k (inputToBase (b + 2) (by omega) (reverseInput lis) (reverseInput_length lis)) := by
-  sorry
 
-theorem reverseInput_of_inputToBase (b : ℕ) (hb: b > 1) (l: List ℕ) (hm : l.length = m) :
-  reverseInput (inputToBase b hb l hm) = l := by
-  sorry
 
 /- USELESS CODES
 def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=

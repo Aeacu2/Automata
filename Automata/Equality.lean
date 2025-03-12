@@ -152,11 +152,11 @@ theorem eqInput_if_equal (input : List ℕ) (hl: input.length = l) (m n : Fin l)
 
     have lenStretchLen0 : (stretchLen (mapToBase (b+2) input))[m].length = maxLen (mapToBase (b+2) input) := by
       apply stretchLen_uniform
-      exact List.getElem_mem (stretchLen (mapToBase (b+2) input)) m indexValid0
+      exact List.mem_of_getElem (id (Eq.symm stretchLenEq))
 
     have lenStretchLen1 : (stretchLen (mapToBase (b+2) input))[n].length = maxLen (mapToBase (b+2) input) := by
       apply stretchLen_uniform
-      exact List.getElem_mem (stretchLen (mapToBase (b+2) input)) n indexValid1
+      exact List.mem_of_getElem stretchLenEq
 
     have stretchLenIndexEq (i: ℕ)(hi: i < (maxLen (mapToBase (b+2) input))): (stretchLen (mapToBase (b+2) input))[m][i] = (stretchLen (mapToBase (b+2) input))[n][i] := by
       simp only [stretchLenEq]
@@ -217,8 +217,6 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: List (List ℕ)) (k l: Fin L.leng
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hk
         . simp[*]
-        . simp_all only [Fin.getElem_fin, ne_eq, List.length_replicate, le_refl, tsub_eq_zero_of_le]
-          exact lenk
       simp_all only [ne_eq, ge_iff_le, not_true_eq_false]
 
     .
@@ -231,8 +229,8 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: List (List ℕ)) (k l: Fin L.leng
         rw[List.getElem_append_right]
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hl
-        . simp only [List.length_replicate, lt_self_iff_false, not_false_eq_true]
-        . simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le, lenl]
+        . simp
+
 
       simp_all only [ge_iff_le, ne_eq]
   rw[← hL] at h
@@ -327,7 +325,7 @@ theorem indexEqOfEqZip (m n : Fin l) (b lsLength : ℕ) (lss: List (List ℕ))
           specialize ih (zipTailHls lss hls)
           specialize ih h2
           simp at ih
-          have lss0 : lss[m]'(by omega) ∈ lss := by apply List.getElem_mem lss m _
+          have lss0 : lss[m]'(by omega) ∈ lss := by apply List.getElem_mem
           have lss1 : lss[n] ∈ lss := by apply List.getElem_mem
           have i0Len : i < lss[m].length := by
             specialize hls lss[m]
@@ -344,7 +342,6 @@ theorem indexEqOfEqZip (m n : Fin l) (b lsLength : ℕ) (lss: List (List ℕ))
             specialize ih n hi
             -- rw[← tailIndex lss[0] n i0Len]
             -- rw[← tailIndex lss[1] n i1Len]
-            simp only [List.getElem_tail, *] at ih
             exact ih
 
 theorem equal_if_eqInput (hl :input.length = l) (m n : Fin l) :
@@ -487,6 +484,4 @@ theorem equality_respectZero : (eqBase (b + 2) l m n).respectZero := by
 
 
 -- Demos
---Failed!!!
--- theorem zero_is_zero_fail : 0 = 0 := by
---   apply (eqBase_iff_equal_false 2 (by norm_num) [0, 0] (by norm_num) 0 1).mpr
+

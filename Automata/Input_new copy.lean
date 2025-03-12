@@ -11,13 +11,13 @@ Major function: inputToBase
 
 Idea: Given a vector of natural numbers 'l',
 
-Step 1: Convert each number to base b, get 'ls' : Fin m -> (List ℕ)
+Step 1: Convert each number to base b, get 'ls' : Fin (m + 1) -> (List ℕ)
 
 Functions involved: toBase, mapToBase
 Theorems involved: digits_end_nonzero, toBase_lead_nonzero,
 toBase_lt_base, mapToBase_lt_base, mapToBase_length
 
-Step 2: Stretch each list to uniform length by adding leading zeros, get 'lss' : Fin m -> (List ℕ)
+Step 2: Stretch each list to uniform length by adding leading zeros, get 'lss' : Fin (m + 1) -> (List ℕ)
 
 Functions involved: addZeroes, stretchLen
 Theorems involved: addZeroes_elem, addZeroesLength, stretchLen_length, stretchLen_uniform
@@ -197,28 +197,6 @@ theorem splitLeadZero_right (l: List ℕ) :
       rw[ih]
     . simp[List.splitLeadZero, hx, List.remLeadZero]
 
-theorem remLeadZero.length (l: List ℕ) :
-  l.remLeadZero.length ≤ l.length := by
-  induction l
-  case nil => simp[List.remLeadZero]
-  case cons x xs ih =>
-    simp[List.remLeadZero]
-    by_cases hx: x = 0
-    . simp only [hx, ↓reduceIte]
-      exact Nat.le_add_right_of_le ih
-    . simp[List.remLeadZero, hx]
-
-theorem remLeadZero_nonZero (l: List ℕ) (hLen: l.length > 0) (hHead : l[0] ≠ 0) :
-  l.remLeadZero = l := by
-  induction l
-  case nil => simp at hLen
-  case cons x xs ih =>
-    simp[List.remLeadZero]
-    by_cases hx: x = 0
-    . simp[List.remLeadZero, hx]
-      exact False.elim (hHead hx)
-    . simp[hx]
-
 theorem remLeadZero_mem (l : List ℕ) (x : ℕ) : x ∈ l.remLeadZero → x ∈ l := by
   intro h
   induction l
@@ -277,51 +255,15 @@ theorem toBase_ofBase'' (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x
       exact hx
     . exact this
 
--- theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) :
---   ∃ k, addZeroes k (toBase b (ofBase b l)) = l := by
---   use (l.length - l.remLeadZero.length)
---   rw[toBase_ofBase'' b l hb hlb]
---   exact splitLeadZero_addZeroes l
-
 theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) :
-  addZeroes (l.length - l.remLeadZero.length) (toBase b (ofBase b l)) = l := by
+  ∃ k, addZeroes k (toBase b (ofBase b l)) = l := by
+  use (l.length - l.remLeadZero.length)
   rw[toBase_ofBase'' b l hb hlb]
   exact splitLeadZero_addZeroes l
 
 def maxLen : (l: List (List α)) → ℕ
   | [] => 0
   | x :: xs => max x.length (maxLen xs)
-
-theorem maxLen_exist (l: List (List α)) (hl: l.length > 0) :
-  ∃ x ∈ l, maxLen l = x.length := by
-  induction l
-  case nil => simp at hl
-  case cons x xs ih =>
-    by_cases h: xs.length = 0
-    . rw[h] at ih
-      use x
-      constructor
-      . simp
-      . simp[maxLen]
-        have : xs = [] := by
-          exact List.eq_nil_of_length_eq_zero h
-        simp_all[maxLen]
-    . have : xs.length > 0 := by omega
-      specialize ih this
-      rcases ih with ⟨y, hy, hlen⟩
-      have h1: maxLen (x :: xs) = max x.length y.length := by
-        simp only [maxLen]
-        rw[hlen]
-      by_cases h2: x.length ≥ y.length
-      . use x
-        constructor
-        . simp
-        . simp[h1, h2]
-      . use y
-        constructor
-        . exact List.mem_cons_of_mem x hy
-        . simp only [h1, sup_eq_right]
-          omega
 
 theorem cons_lt_maxLen (l: List α) (ls: List (List α)) :
   l.length ≤ maxLen (l :: ls) := by
@@ -343,41 +285,19 @@ theorem len_le_maxLen (l: List α) (ls: List (List α)) :
       right
       exact ih l h1
 
-def maxLenFin (v: (Fin m → List ℕ)) : ℕ :=
+def maxLenFin (v: (Fin (m + 1) → List ℕ)) : ℕ :=
   maxLen (List.ofFn v)
 
-theorem len_le_maxLenFin (v: (Fin m → List ℕ)) (i: Fin m) :
+theorem len_le_maxLenFin (v: (Fin (m + 1) → List ℕ)) (i: Fin (m + 1)) :
   (v i).length ≤ maxLenFin v := by
   apply len_le_maxLen
   refine (List.mem_ofFn v (v i)).mpr ?_
   exact Set.mem_range_self i
 
-theorem maxLenFin_exist (v: (Fin m → List ℕ)) (hm: m > 0) :
-  ∃ i, (v i).length = maxLenFin v := by
-  have := maxLen_exist (List.ofFn v) (by simp; omega)
-  rcases this with ⟨x, hx, hlen⟩
-  have := (List.mem_ofFn v x).mp hx
-  rcases this with ⟨i, hi⟩
-  use i
-  rw[hi, ← hlen, maxLenFin]
-
-theorem maxLenFin_le (v: (Fin m → List ℕ)) (n: ℕ) :
-  (∀ i, (v i).length ≤ n) → maxLenFin v ≤ n := by
-  intro h
-  by_cases hm: m > 0
-  . rcases maxLenFin_exist v hm with ⟨i, hi⟩
-    rw[← hi]
-    exact h i
-  . have : m = 0 := by omega
-    have : List.ofFn v = [] := by
-      aesop
-    rw[maxLenFin, this, maxLen]
-    omega
-
-def mapToBase (b: ℕ) (v : Fin m → ℕ) : Fin m → List ℕ :=
+def mapToBase (b: ℕ) (v : Fin (m + 1) → ℕ) : Fin (m + 1) → List ℕ :=
   fun i => toBase b (v i)
 
-theorem mapToBase_lt_base (b: ℕ) (v : Fin m → ℕ) (hb: b > 1) (i : Fin m) :
+theorem mapToBase_lt_base (b: ℕ) (v : Fin (m + 1) → ℕ) (hb: b > 1) (i : Fin (m + 1)) :
   ∀ x ∈ (mapToBase b v) i, x < b  := by
   intro x h
   simp only [mapToBase] at h
@@ -385,16 +305,16 @@ theorem mapToBase_lt_base (b: ℕ) (v : Fin m → ℕ) (hb: b > 1) (i : Fin m) :
   omega
   exact h
 
-def stretchLen (ls: Fin m → (List ℕ)) : Fin m → (List ℕ) :=
+def stretchLen (ls: Fin (m + 1) → (List ℕ)) : Fin (m + 1) → (List ℕ) :=
   fun i => addZeroes (maxLenFin ls - (ls i).length) (ls i)
 
-theorem stretchLen_uniform (ls: Fin m → (List ℕ)) (i : Fin m) :
+theorem stretchLen_uniform (ls: Fin (m + 1) → (List ℕ)) (i : Fin (m + 1)) :
   (stretchLen ls i).length = maxLenFin ls:= by
   simp only [stretchLen, addZeroes, List.length_append, List.length_replicate]
   have := len_le_maxLenFin ls i
   omega
 
-theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (v: Fin m → ℕ) (hb: b > 1) (i : Fin m) :
+theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (v: Fin (m + 1) → ℕ) (hb: b > 1) (i : Fin (m + 1)) :
   ∀ x ∈ (stretchLen (mapToBase b v)) i, x < b := by
   intro x h
   simp only [stretchLen, addZeroes] at h
@@ -405,33 +325,33 @@ theorem stretchLen_of_mapToBase_lt_base (b: ℕ) (v: Fin m → ℕ) (hb: b > 1) 
   . exact hb
   . exact h1
 
-theorem zipTailHlb (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < b) :
+theorem zipTailHlb (ls: Fin (m + 1) → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < b) :
   ∀ i, ∀ x ∈ (ls i).tail, x < b := by
   intro i x h
   specialize hlb i
   apply hlb
   . apply List.mem_of_mem_tail h
 
-theorem zipTailHls (ls: Fin m → (List ℕ)) (hls : ∀ i, (ls i).length = l + 1) :
+theorem zipTailHls (ls: Fin (m + 1) → (List ℕ)) (hls : ∀ i, (ls i).length = l + 1) :
   ∀ i, (ls i).tail.length = l := by
   intro i
   have h := List.length_tail (ls i)
   rw[hls] at h
   exact h
 
-def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l) : List (Fin m → Fin (b + 2))  :=
-  match l with
+def zip (ls: Fin (m + 1) → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = (ls 0).length) : List (Fin (m + 1) → Fin (b + 2))  :=
+  match hh:(ls 0).length with
   | 0 => []
-  | m+1 =>
+  | l+1 =>
      (fun i =>
        have : 0 < (ls i).length := by
          rw[hls]
          omega
        ⟨(ls i)[0], by apply hlb; exact List.getElem_mem this⟩) :: (zip (fun i => (ls i).tail)
         (by apply zipTailHlb; exact hlb)
-        (by apply zipTailHls; exact hls))
+        (by apply zipTailHls; intro i; rw[hls]; simp; omega))
 
-def toWord (v: Fin m → ℕ) (b: ℕ) : List (Fin m → Fin (b + 2)) :=
+def toWord (v: Fin (m + 1) → ℕ) (b: ℕ) : List (Fin (m + 1) → Fin (b + 2)) :=
   zip (stretchLen (mapToBase (b + 2) v)) (by
     apply stretchLen_of_mapToBase_lt_base
     omega
@@ -441,25 +361,25 @@ def toWord (v: Fin m → ℕ) (b: ℕ) : List (Fin m → Fin (b + 2)) :=
   )
 
 /-- Hello, Aeacus! -/
-def getDigits {b : ℕ} (ls : List (Fin m → Fin (b + 2))) : Fin m → List ℕ :=
+def getDigits {b : ℕ} (ls : List (Fin (m + 1) → Fin (b + 2))) : Fin (m + 1) → List ℕ :=
   fun i => List.map (fun f => f i) ls
 
-theorem getDigits_uniform (ls : List (Fin m → Fin (b + 2))) (i : Fin m) :
+theorem getDigits_uniform (ls : List (Fin (m + 1) → Fin (b + 2))) (i : Fin (m + 1)) :
   (getDigits ls i).length = ls.length := by
   simp only [getDigits, List.length_map]
 
-theorem getDigits_lt_base (ls : List (Fin m → Fin (b + 2))) (i : Fin m) :
+theorem getDigits_lt_base (ls : List (Fin (m + 1) → Fin (b + 2))) (i : Fin (m + 1)) :
   ∀ x ∈ getDigits ls i, x < b + 2 := by
   intro x h
   simp only [getDigits, List.mem_map] at h
   rcases h with ⟨f, hf, rfl⟩
   exact (f i).isLt
 
-theorem getDigits_of_nil (i : Fin m) :
+theorem getDigits_of_nil (i : Fin (m + 1)) :
   @getDigits m b [] i = [] := by
   simp[getDigits]
 
-theorem getDigits_of_zip' (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = (l + 1)) :
+theorem getDigits_of_zip' (ls: Fin (m + 1) → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = (l + 1)) :
   getDigits (zip ls hlb hls) = ls := by
   funext i
   simp only [getDigits, zip]
@@ -487,7 +407,7 @@ theorem getDigits_of_zip' (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i
     simp only [List.map, zip]
     exact ih
 
-theorem getDigits_of_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l) :
+theorem getDigits_of_zip (ls: Fin (m + 1) → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l) :
   getDigits (zip ls hlb hls) = ls := by
   induction l generalizing ls with
   | zero =>
@@ -498,7 +418,7 @@ theorem getDigits_of_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i,
   | succ l ih =>
     exact getDigits_of_zip' ls hlb hls
 
-theorem zip_of_getDigits (ls: List (Fin m → Fin (b + 2))) :
+theorem zip_of_getDigits (ls: List (Fin (m + 1) → Fin (b + 2))) :
   ls = @zip m b ls.length (getDigits ls) (fun i x a ↦ getDigits_lt_base ls i x a) (fun i ↦ getDigits_uniform ls i) := by
   induction ls with
   | nil => simp[zip]
@@ -507,80 +427,53 @@ theorem zip_of_getDigits (ls: List (Fin m → Fin (b + 2))) :
     nth_rw 1 [ih]
     congr
 
-theorem getDigits_length (ls : List (Fin m → Fin (b + 2))) (i : Fin m) : (getDigits ls i).length = ls.length := by
+theorem getDigits_length (ls : List (Fin (m + 1) → Fin (b + 2))) (i : Fin (m + 1)) : (getDigits ls i).length = ls.length := by
   simp only [getDigits, List.length_map]
 
-def toNat_aux (b : ℕ) (Digits : Fin m → List ℕ) : Fin m → ℕ :=
+def toNat_aux (b : ℕ) (Digits : Fin (m + 1) → List ℕ) : Fin (m + 1) → ℕ :=
   fun i => ofBase (b + 2) (Digits i)
 
-theorem toNat_aux_of_mapToBase (b: ℕ) (v: Fin m → ℕ) :
+theorem toNat_aux_of_mapToBase (b: ℕ) (v: Fin (m + 1) → ℕ) :
   toNat_aux b (mapToBase (b + 2) v) = v := by
   funext i
   simp[toNat_aux, mapToBase, ofBase_toBase]
 
-theorem toNat_aux_of_stretchLen (b: ℕ) (v: Fin m → ℕ) :
+theorem toNat_aux_of_stretchLen (b: ℕ) (v: Fin (m + 1) → ℕ) :
   toNat_aux b (stretchLen (mapToBase (b + 2) v)) = v := by
   funext i
   simp[toNat_aux, stretchLen, ofBase_addZeroes, ofBase_toBase, mapToBase]
 
-def toNat (ls : List (Fin m → Fin (b + 2))) : Fin m → ℕ :=
+def toNat (ls : List (Fin (m + 1) → Fin (b + 2))) : Fin (m + 1) → ℕ :=
   toNat_aux b (getDigits ls)
 
-theorem length_aux (ls : List (Fin m → Fin (b + 2))) (i : Fin m) :
-  ((mapToBase (b + 2) (toNat_aux b (getDigits ls))) i) = (getDigits ls i).remLeadZero := by
-  simp only [mapToBase, toNat_aux, getDigits]
-  rw[toBase_ofBase'' (b+2) (List.map (fun f ↦ ↑(f i)) ls) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
-
-theorem toWord_of_toNat' (ls : List (Fin m → Fin (b + 2))) (hLen: ls.length > 0) (hHead : ls[0] ≠ fun _ => 0) :
+theorem toWord_of_toNat' (ls : List (Fin (m + 1) → Fin (b + 2))) (hLen: ls.length > 0) (hHead : ls[0] ≠ fun _ => 0) :
   ls = toWord (toNat ls) b := by
-  simp only [toWord, toNat]
-  have hi : ∃ i : Fin m, ls[0] i ≠ 0 := by
-    exact Function.ne_iff.mp hHead
-  have length : ls.length = maxLenFin (mapToBase (b + 2) (toNat_aux b (getDigits ls))) := by
-    rcases hi with ⟨i, hi⟩
-    rw[← getDigits_length ls i]
-    apply le_antisymm
-    . have := len_le_maxLenFin (mapToBase (b + 2) (toNat_aux b (getDigits ls))) i
-      apply le_trans
-      swap
-      exact this
-      simp[mapToBase, toNat_aux]
-      rw[toBase_ofBase'' (b+2) (getDigits ls i) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
-      rw[remLeadZero_nonZero (getDigits ls i) (by rw[getDigits_length]; assumption) (by
-      simp only [getDigits, List.getElem_map, ne_eq];
-      contrapose! hi
-      exact Fin.eq_of_val_eq (hi))]
-    . apply maxLenFin_le
-      intro i'
-      rw[mapToBase, toNat_aux, toBase_ofBase'' (b + 2) (getDigits ls i') (by omega) (by exact fun x a ↦ getDigits_lt_base ls i' x a)]
-      have : (getDigits ls i').length = (getDigits ls i).length := by
-        rw[getDigits_length ls i']
-        rw[getDigits_length ls i]
-      rw[← this]
-      exact remLeadZero.length (getDigits ls i')
+  simp[toWord, toNat, mapToBase]
   have : (stretchLen (mapToBase (b + 2) (toNat_aux b (getDigits ls)))) = (getDigits ls) := by
-      funext i
-      simp[getDigits, stretchLen, toNat_aux, mapToBase]
-      rw[toBase_ofBase'' (b+2) (List.map (fun f ↦ ↑(f i)) ls) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
-      nth_rw 3 [← toBase_ofBase (b + 2) (List.map (fun f ↦ ↑(f i)) ls) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
-      congr
-      swap
-      rw[toBase_ofBase'' (b+2) (List.map (fun f ↦ ↑(f i)) ls) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
-      rw[← length]
-      simp only [List.length_map]
+      sorry
+
   simp_rw[this]
-  nth_rw 1 [zip_of_getDigits ls]
+  have step := zip_of_getDigits ls
+  nth_rw 1 [step]
   congr
+  sorry
 
-theorem toWord_of_toNat (ls : List (Fin m → Fin (b + 2))) :
-  ∃ (k : ℕ), ls = padZeros k (toWord (toNat ls) b) := by sorry
 
-theorem toNat_toWord (v: Fin m → ℕ) (b: ℕ) :
+
+
+
+
+
+theorem toWord_of_toNat (ls : List (Fin (m + 1) → Fin (b + 2))) :
+  ∃ (k : ℕ), ls = padZeros k (toWord (toNat ls) b) := by
+  sorry
+
+theorem toNat_of_toWord (v: Fin (m + 1) → ℕ) (b: ℕ) :
   toNat (toWord v b) = v := by
   simp[toNat, toNat_aux, getDigits, toWord, zip, stretchLen, addZeroes, mapToBase, toBase]
   have : (getDigits (zip (stretchLen (mapToBase (b + 2) v)) (stretchLen_of_mapToBase_lt_base (b + 2) v (by omega)) (stretchLen_uniform (mapToBase (b + 2) v))) = stretchLen (mapToBase (b + 2) v)) := by
 
-    have : ∀ (i : Fin m), ∀ x ∈ stretchLen (mapToBase (b + 2) v) i, x < b + 2 := by
+    have : ∀ (i : Fin (m + 1)), ∀ x ∈ stretchLen (mapToBase (b + 2) v) i, x < b + 2 := by
       apply stretchLen_of_mapToBase_lt_base
       omega
     let l := maxLenFin (mapToBase (b + 2) v)

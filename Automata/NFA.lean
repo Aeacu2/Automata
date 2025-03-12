@@ -4,7 +4,7 @@ import Automata.DFA
 import Mathlib.Data.List.Defs
 import Mathlib.Data.FinEnum
 
--- A type for Lists with no duplicates, for synthesizing [Fintype ListND] state from [Fintype state]
+/-- A type for Lists with no duplicates, for synthesizing [Fintype ListND] state from [Fintype state] -/
 abbrev ListND (α : Type) := {l : List α // l.Nodup}
 
 structure NFA (α state : Type) where
