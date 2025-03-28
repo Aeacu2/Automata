@@ -79,7 +79,7 @@ theorem project_transFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+
   induction l generalizing states
   case nil =>
     simp only [NFA.transFrom, List.mem_singleton] at h
-    simp_all only [List.nil_eq, List.map_eq_nil, exists_eq_left]
+    simp_all only [List.nil_eq, List.map_eq_nil_iff, exists_eq_left]
     use q
     simp only [h, DFAO.transFrom, and_self]
   case cons f fs ih =>
@@ -183,40 +183,27 @@ theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (F
     . use (Fintype.card (ListND state) + k)
     . exact h'
 
-theorem list_project_aux (x b : ℕ) (v : Fin m → ℕ) (i : Fin (m + 1)) : toNat (List.map (fun f ↦ remove_index i f) (toWord (recover_value i x v) b)) = v := by
-  sorry
+theorem list_project (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : ∃ k, (List.map (fun f ↦ remove_index i f) (toWord (recover_value i x v) b)) = padZeros k (toWord v b) := by
 
-theorem list_project (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : ∃ k, (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
-      simp_rw[← hl]
-      apply List.length_insertNth
-      omega
-    ))) = padZeros k (inputToBase (b+2) (by norm_num) l (by omega)) := by
-
-  have := inputToBase_of_reverseInput (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
-      simp_rw[← hl]
-      apply List.length_insertNth
-      omega
-    )))
+  have := toWord_toNat_exist (toWord (recover_value i x v) b)
   rcases this with ⟨k, h⟩
-  use k
   rw[h]
-  congr
-  exact list_project_aux x b l hl m
 
-theorem correct_project [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len+1) → Fin (b+2)) state) (hres: dfa.respectZero):
-  (∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega))) → (project m dfa).fixLeadingZeros.eval (inputToBase (b+2) (by omega) l hl):= by
+
+theorem correct_project [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
+  (∃ (x : ℕ), dfa.eval (toWord (recover_value i x v) b)) → (project i dfa).fixLeadingZeros.eval (toWord v b) := by
   rw[NFA.fixLeadingZeros_eval]
   intro h
   rcases h with ⟨x, h⟩
-  have := eval_project dfa m (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega)) h
-  have lis := list_project x b l hl m
+  have := eval_project dfa i (toWord (recover_value i x v) b) h
+  have lis := list_project x b v i
   rcases lis with ⟨k, h₁⟩
   rw[h₁] at this
-  apply (project m dfa).bounded_accept _
+  apply (project i dfa).bounded_accept _
   . apply project_acceptZero
     exact DFA.acceptZero_of_respectZero dfa hres
   swap
-  . exact padZeros k (inputToBase (b+2) (by norm_num) l (by omega))
+  . exact padZeros k (toWord v b)
   . constructor
     . use k
     . exact this

@@ -142,151 +142,151 @@ theorem ofBase_addZeroes (b: ℕ) (n: ℕ) (l: List ℕ) :
   case succ n ih =>
     simp [addZeroes, List.replicate, List.foldl, ih]
 
-def List.remLeadZero (l: List ℕ) : List ℕ :=
+def List.remAddZero (l: List ℕ) : List ℕ :=
   match l with
   | [] => []
-  | x :: xs => if x = 0 then xs.remLeadZero else l
+  | x :: xs => if x = 0 then xs.remAddZero else l
 
-def List.splitLeadZero (l: List ℕ) : (List ℕ) × (List ℕ) :=
+def List.splitAddZero (l: List ℕ) : (List ℕ) × (List ℕ) :=
   match l with
   | [] => ⟨[], []⟩
-  | x :: xs => if x = 0 then let ⟨ys, zs⟩ := xs.splitLeadZero
+  | x :: xs => if x = 0 then let ⟨ys, zs⟩ := xs.splitAddZero
    ⟨0 :: ys, zs⟩ else ⟨[], l⟩
 
-theorem splitLeadZero_append (l: List ℕ) :
-  let ⟨ys, zs⟩ := l.splitLeadZero; ys ++ zs = l := by
+theorem splitAddZero_append (l: List ℕ) :
+  let ⟨ys, zs⟩ := l.splitAddZero; ys ++ zs = l := by
   induction l
-  case nil => simp[List.splitLeadZero]
+  case nil => simp[List.splitAddZero]
   case cons x xs ih =>
-    simp[List.splitLeadZero]
+    simp[List.splitAddZero]
     by_cases hx: x = 0
     . simp only [hx, ↓reduceIte, List.cons_append, List.cons.injEq, true_and]
       rw[ih]
-    . simp[List.splitLeadZero, hx]
+    . simp[List.splitAddZero, hx]
 
-theorem splitLeadZero_left (l: List ℕ) :
-  let ⟨ys, _⟩ := l.splitLeadZero; ∀ x ∈ ys, x = 0 := by
+theorem splitAddZero_left (l: List ℕ) :
+  let ⟨ys, _⟩ := l.splitAddZero; ∀ x ∈ ys, x = 0 := by
   induction l
-  case nil => simp[List.splitLeadZero]
+  case nil => simp[List.splitAddZero]
   case cons x xs ih =>
-    simp[List.splitLeadZero]
+    simp[List.splitAddZero]
     by_cases hx: x = 0
     . simp only [hx, ↓reduceIte, List.mem_cons, forall_eq_or_imp, true_and]
       exact ih
-    . simp[List.splitLeadZero, hx]
+    . simp[List.splitAddZero, hx]
 
-theorem splitLeadZero_left_replicate (l: List ℕ) :
-  let ⟨ys, _⟩ := l.splitLeadZero; ys = List.replicate ys.length 0 := by
+theorem splitAddZero_left_replicate (l: List ℕ) :
+  let ⟨ys, _⟩ := l.splitAddZero; ys = List.replicate ys.length 0 := by
   induction l
-  case nil => simp[List.splitLeadZero]
+  case nil => simp[List.splitAddZero]
   case cons x xs ih =>
-    simp[List.splitLeadZero]
+    simp[List.splitAddZero]
     by_cases hx: x = 0
     . simp only [hx, ↓reduceIte, List.length_cons, List.replicate, List.cons.injEq, true_and]
       exact ih
-    . simp[List.splitLeadZero, hx]
+    . simp[List.splitAddZero, hx]
 
-theorem splitLeadZero_right (l: List ℕ) :
-  let ⟨_, zs⟩ := l.splitLeadZero; zs = l.remLeadZero := by
+theorem splitAddZero_right (l: List ℕ) :
+  let ⟨_, zs⟩ := l.splitAddZero; zs = l.remAddZero := by
   induction l
-  case nil => simp[List.splitLeadZero, List.remLeadZero]
+  case nil => simp[List.splitAddZero, List.remAddZero]
   case cons x xs ih =>
-    simp[List.splitLeadZero]
+    simp[List.splitAddZero]
     by_cases hx: x = 0
-    . simp[List.splitLeadZero, hx, List.remLeadZero]
+    . simp[List.splitAddZero, hx, List.remAddZero]
       rw[ih]
-    . simp[List.splitLeadZero, hx, List.remLeadZero]
+    . simp[List.splitAddZero, hx, List.remAddZero]
 
-theorem remLeadZero.length (l: List ℕ) :
-  l.remLeadZero.length ≤ l.length := by
+theorem remAddZero.length (l: List ℕ) :
+  l.remAddZero.length ≤ l.length := by
   induction l
-  case nil => simp[List.remLeadZero]
+  case nil => simp[List.remAddZero]
   case cons x xs ih =>
-    simp[List.remLeadZero]
+    simp[List.remAddZero]
     by_cases hx: x = 0
     . simp only [hx, ↓reduceIte]
       exact Nat.le_add_right_of_le ih
-    . simp[List.remLeadZero, hx]
+    . simp[List.remAddZero, hx]
 
-theorem remLeadZero_nonZero (l: List ℕ) (hLen: l.length > 0) (hHead : l[0] ≠ 0) :
-  l.remLeadZero = l := by
+theorem remAddZero_nonZero (l: List ℕ) (hLen: l.length > 0) (hHead : l[0] ≠ 0) :
+  l.remAddZero = l := by
   induction l
   case nil => simp at hLen
   case cons x xs ih =>
-    simp[List.remLeadZero]
+    simp[List.remAddZero]
     by_cases hx: x = 0
-    . simp[List.remLeadZero, hx]
+    . simp[List.remAddZero, hx]
       exact False.elim (hHead hx)
     . simp[hx]
 
-theorem remLeadZero_mem (l : List ℕ) (x : ℕ) : x ∈ l.remLeadZero → x ∈ l := by
+theorem remAddZero_mem (l : List ℕ) (x : ℕ) : x ∈ l.remAddZero → x ∈ l := by
   intro h
   induction l
-  case nil => simp_all[List.remLeadZero]
+  case nil => simp_all[List.remAddZero]
   case cons y ys ih =>
-    simp[List.remLeadZero] at h
+    simp[List.remAddZero] at h
     aesop
 
-theorem remLeadZero_head (l : List ℕ)
-  (h : l.remLeadZero.length > 0) :
-  l.remLeadZero[0] > 0 := by
+theorem remAddZero_head (l : List ℕ)
+  (h : l.remAddZero.length > 0) :
+  l.remAddZero[0] > 0 := by
   induction l
-  case nil => simp[List.remLeadZero] at h
+  case nil => simp[List.remAddZero] at h
   case cons x xs ih =>
-    simp[List.remLeadZero] at h
+    simp[List.remAddZero] at h
     by_cases hx: x = 0
-    . simp[List.remLeadZero, hx]
+    . simp[List.remAddZero, hx]
       apply ih
-    . simp[List.remLeadZero, hx]
+    . simp[List.remAddZero, hx]
       omega
 
-theorem remLeadZero_addZeroes (n: ℕ) (l: List ℕ) :
-  (addZeroes n l).remLeadZero = l.remLeadZero := by
-  simp only [addZeroes, List.remLeadZero, List.replicate]
+theorem remAddZero_addZeroes (n: ℕ) (l: List ℕ) :
+  (addZeroes n l).remAddZero = l.remAddZero := by
+  simp only [addZeroes, List.remAddZero, List.replicate]
   induction n
   case zero => simp
   case succ n ih =>
-    rw[List.remLeadZero.eq_def]
+    rw[List.remAddZero.eq_def]
     simp[List.replicate]
     exact ih
 
-theorem splitLeadZero_addZeroes (l : List ℕ):
-  addZeroes (l.length - l.remLeadZero.length) (l.remLeadZero) = l := by
-  nth_rw 4 [← splitLeadZero_append l]
-  rw[splitLeadZero_right, splitLeadZero_left_replicate]
+theorem splitAddZero_addZeroes (l : List ℕ):
+  addZeroes (l.length - l.remAddZero.length) (l.remAddZero) = l := by
+  nth_rw 4 [← splitAddZero_append l]
+  rw[splitAddZero_right, splitAddZero_left_replicate]
   simp[addZeroes, List.replicate]
-  rw[← splitLeadZero_right]
-  have: l = l.splitLeadZero.1 ++ l.splitLeadZero.2 := by
-    rw[splitLeadZero_append]
+  rw[← splitAddZero_right]
+  have: l = l.splitAddZero.1 ++ l.splitAddZero.2 := by
+    rw[splitAddZero_append]
   nth_rw 1 [this]
   simp
 
 
 theorem toBase_ofBase'' (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) :
-  (toBase b (ofBase b l)) = l.remLeadZero := by
-  nth_rw 1 [← splitLeadZero_addZeroes l]
-  simp[ofBase_addZeroes, remLeadZero_addZeroes]
-  by_cases h: l.remLeadZero.length = 0
+  (toBase b (ofBase b l)) = l.remAddZero := by
+  nth_rw 1 [← splitAddZero_addZeroes l]
+  simp[ofBase_addZeroes, remAddZero_addZeroes]
+  by_cases h: l.remAddZero.length = 0
   . simp_all[ofBase, toBase]
-  . have := remLeadZero_head l (by omega)
+  . have := remAddZero_head l (by omega)
     apply toBase_ofBase'
     . exact hb
     . intro x hx
       apply hlb
-      apply remLeadZero_mem
+      apply remAddZero_mem
       exact hx
     . exact this
 
 -- theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) :
 --   ∃ k, addZeroes k (toBase b (ofBase b l)) = l := by
---   use (l.length - l.remLeadZero.length)
+--   use (l.length - l.remAddZero.length)
 --   rw[toBase_ofBase'' b l hb hlb]
---   exact splitLeadZero_addZeroes l
+--   exact splitAddZero_addZeroes l
 
 theorem toBase_ofBase (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x < b) :
-  addZeroes (l.length - l.remLeadZero.length) (toBase b (ofBase b l)) = l := by
+  addZeroes (l.length - l.remAddZero.length) (toBase b (ofBase b l)) = l := by
   rw[toBase_ofBase'' b l hb hlb]
-  exact splitLeadZero_addZeroes l
+  exact splitAddZero_addZeroes l
 
 def maxLen : (l: List (List α)) → ℕ
   | [] => 0
@@ -342,6 +342,16 @@ theorem len_le_maxLen (l: List α) (ls: List (List α)) :
     . simp[maxLen]
       right
       exact ih l h1
+
+theorem maxLen_replicate (n: ℕ) (x: List α) :
+  maxLen (List.replicate (n+1) x) = x.length := by
+  induction n
+  case zero =>
+    simp[List.replicate, maxLen]
+  case succ n ih =>
+    simp[List.replicate, maxLen]
+    rw[← ih, List.replicate, maxLen]
+    exact Nat.le_max_right x.length (maxLen (List.replicate n x))
 
 def maxLenFin (v: (Fin m → List ℕ)) : ℕ :=
   maxLen (List.ofFn v)
@@ -431,6 +441,10 @@ def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hl
         (by apply zipTailHlb; exact hlb)
         (by apply zipTailHls; exact hls))
 
+theorem zip_nil (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = 0) :
+  zip ls hlb hls = [] := by
+  simp[zip]
+
 def toWord (v: Fin m → ℕ) (b: ℕ) : List (Fin m → Fin (b + 2)) :=
   zip (stretchLen (mapToBase (b + 2) v)) (by
     apply stretchLen_of_mapToBase_lt_base
@@ -513,6 +527,11 @@ theorem getDigits_length (ls : List (Fin m → Fin (b + 2))) (i : Fin m) : (getD
 def toNat_aux (b : ℕ) (Digits : Fin m → List ℕ) : Fin m → ℕ :=
   fun i => ofBase (b + 2) (Digits i)
 
+theorem toNat_aux_of_nil (b: ℕ) : @toNat_aux m b (fun _ => []) = fun _ => 0 := by
+
+  funext i
+  simp[toNat_aux, ofBase]
+
 theorem toNat_aux_of_mapToBase (b: ℕ) (v: Fin m → ℕ) :
   toNat_aux b (mapToBase (b + 2) v) = v := by
   funext i
@@ -527,11 +546,11 @@ def toNat (ls : List (Fin m → Fin (b + 2))) : Fin m → ℕ :=
   toNat_aux b (getDigits ls)
 
 theorem length_aux (ls : List (Fin m → Fin (b + 2))) (i : Fin m) :
-  ((mapToBase (b + 2) (toNat_aux b (getDigits ls))) i) = (getDigits ls i).remLeadZero := by
+  ((mapToBase (b + 2) (toNat_aux b (getDigits ls))) i) = (getDigits ls i).remAddZero := by
   simp only [mapToBase, toNat_aux, getDigits]
   rw[toBase_ofBase'' (b+2) (List.map (fun f ↦ ↑(f i)) ls) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
 
-theorem toWord_of_toNat' (ls : List (Fin m → Fin (b + 2))) (hLen: ls.length > 0) (hHead : ls[0] ≠ fun _ => 0) :
+theorem toWord_toNat' (ls : List (Fin m → Fin (b + 2))) (hLen: ls.length > 0) (hHead : ls[0] ≠ fun _ => 0) :
   ls = toWord (toNat ls) b := by
   simp only [toWord, toNat]
   have hi : ∃ i : Fin m, ls[0] i ≠ 0 := by
@@ -546,7 +565,7 @@ theorem toWord_of_toNat' (ls : List (Fin m → Fin (b + 2))) (hLen: ls.length > 
       exact this
       simp[mapToBase, toNat_aux]
       rw[toBase_ofBase'' (b+2) (getDigits ls i) (by omega) (by exact fun x a ↦getDigits_lt_base ls i x a)]
-      rw[remLeadZero_nonZero (getDigits ls i) (by rw[getDigits_length]; assumption) (by
+      rw[remAddZero_nonZero (getDigits ls i) (by rw[getDigits_length]; assumption) (by
       simp only [getDigits, List.getElem_map, ne_eq];
       contrapose! hi
       exact Fin.eq_of_val_eq (hi))]
@@ -557,7 +576,7 @@ theorem toWord_of_toNat' (ls : List (Fin m → Fin (b + 2))) (hLen: ls.length > 
         rw[getDigits_length ls i']
         rw[getDigits_length ls i]
       rw[← this]
-      exact remLeadZero.length (getDigits ls i')
+      exact remAddZero.length (getDigits ls i')
   have : (stretchLen (mapToBase (b + 2) (toNat_aux b (getDigits ls)))) = (getDigits ls) := by
       funext i
       simp[getDigits, stretchLen, toNat_aux, mapToBase]
@@ -572,8 +591,127 @@ theorem toWord_of_toNat' (ls : List (Fin m → Fin (b + 2))) (hLen: ls.length > 
   nth_rw 1 [zip_of_getDigits ls]
   congr
 
-theorem toWord_of_toNat (ls : List (Fin m → Fin (b + 2))) :
-  ∃ (k : ℕ), ls = padZeros k (toWord (toNat ls) b) := by sorry
+def List.splitLeadZeros (ls : List (Fin m → Fin (b + 2)))  : List (Fin m → Fin (b + 2)) × List (Fin m → Fin (b + 2)) :=
+  match ls with
+  | [] => ([], [])
+  | x :: xs =>
+    if x = fun _ => 0 then let ⟨ys, zs⟩ := splitLeadZeros xs
+      ⟨x :: ys, zs⟩ else ⟨[], ls⟩
+
+theorem List.splitLeadZeros_append (ls : List (Fin m → Fin (b + 2))) :
+  let ⟨ys, zs⟩ := ls.splitLeadZeros; ys ++ zs = ls := by
+  induction ls
+  case nil => simp[List.splitLeadZeros]
+  case cons x xs ih =>
+    simp[List.splitLeadZeros]
+    by_cases hx: x = fun _ => 0
+    . simp only [hx, ↓reduceIte, List.cons_append, List.cons.injEq, true_and]
+      rw[ih]
+    . simp[List.splitLeadZeros, hx]
+
+theorem splitLeadZeros_left (ls : List (Fin m → Fin (b + 2))) :
+  let ⟨ys, _⟩ := ls.splitLeadZeros; ∀ x ∈ ys, x = fun _ => 0 := by
+  induction ls
+  case nil => simp[List.splitLeadZeros]
+  case cons x xs ih =>
+    simp[List.splitLeadZeros]
+    by_cases hx: x = fun _ => 0
+    . simp only [hx, ↓reduceIte, List.mem_cons, forall_eq_or_imp, true_and]
+      exact ih
+    . simp[List.splitLeadZeros, hx]
+
+theorem splitLEadZeros_right (ls : List (Fin m → Fin (b + 2))) :
+  let ⟨_, zs⟩ := ls.splitLeadZeros; (h: zs.length > 0) →  zs[0] ≠ fun _ => 0 := by
+  induction ls
+  case nil => simp[List.splitLeadZeros]
+  case cons x xs ih =>
+    simp[List.splitLeadZeros]
+    by_cases hx: x = fun _ => 0
+    . simp[List.splitLeadZeros, hx]
+      intro h
+      subst hx
+      simp_all only [gt_iff_lt, ne_eq, forall_true_left, not_false_eq_true]
+    . simp[List.splitLeadZeros, hx]
+
+theorem splitLeadZeros_left_replicate (ls : List (Fin m → Fin (b + 2))) :
+  let ⟨ys, _⟩ := ls.splitLeadZeros; ys = List.replicate ys.length (fun _ => 0) := by
+  induction ls
+  case nil => simp[List.splitLeadZeros]
+  case cons x xs ih =>
+    simp[List.splitLeadZeros]
+    by_cases hx: x = fun _ => 0
+    . simp only [hx, ↓reduceIte, List.length_cons, List.replicate, List.cons.injEq, true_and]
+      exact ih
+    . simp[List.splitLeadZeros, hx]
+
+theorem splitLeadZeros_padZeros (ls : List (Fin m → Fin (b + 2))) :
+  let ⟨ys, xs⟩ := ls.splitLeadZeros; ls = padZeros ys.length xs := by
+  induction ls
+  case nil => simp[List.splitLeadZeros, padZeros]
+  case cons x xs ih =>
+    simp[List.splitLeadZeros]
+    by_cases hx: x = fun _ => 0
+    . simp[hx, padZeros, List.replicate]
+      exact ih
+    . simp[hx, padZeros]
+
+theorem toWord_toNat_aux (ls : List (Fin m → Fin (b + 2))) :
+  ls = padZeros ls.splitLeadZeros.1.length (toWord (toNat ls.splitLeadZeros.2) b) := by
+  nth_rw 1 [splitLeadZeros_padZeros ls]
+  congr
+  by_cases h : ls.splitLeadZeros.2.length = 0
+  . simp_all[toWord, toNat, padZeros, List.length_nil]
+    have : (@toNat_aux m b (@getDigits m b [])) = fun _ => 0 := by
+      apply toNat_aux_of_nil
+    simp only [this]
+    have: @mapToBase m (b + 2) (fun x ↦ 0) = fun x ↦ [] := by
+      funext i
+      simp[mapToBase, toBase]
+    simp only [this]
+    have : @stretchLen m (fun x ↦ []) = fun x ↦ [] := by
+      funext i
+      simp[stretchLen, addZeroes, maxLenFin]
+      induction m with
+      | zero =>
+        have := i.2
+        contradiction
+      | succ m ih =>
+        rw[maxLen_replicate]
+        rfl
+    simp only [this]
+    have := @zip_nil m b (fun x ↦ []) (by
+      intro i x h
+      simp_all
+    ) (by simp)
+    simp_rw[← this]
+    congr
+    simp only [maxLenFin, List.ofFn_const]
+    induction m with
+    | zero => simp[maxLen]
+    | succ m ih =>
+      rw[maxLen_replicate]
+      rfl
+  . have len : ls.splitLeadZeros.2.length > 0 := by omega
+    have : ls.splitLeadZeros.2[0] ≠ fun _ => 0 := by
+      apply splitLEadZeros_right
+    exact toWord_toNat' ls.splitLeadZeros.2 len this
+
+theorem toWord_toNat_exist (ls : List (Fin m → Fin (b + 2))) :
+  ∃ k, ls = padZeros k (toWord (toNat ls) b) := by
+  use ls.splitLeadZeros.1.length
+  have := toWord_toNat_aux ls
+  nth_rw 1 [this]
+  congr
+  rw[toNat, toNat]
+  nth_rw 2 [← ls.splitLeadZeros_append]
+  rw[splitLeadZeros_left_replicate]
+  ext i
+  simp[toNat_aux, getDigits]
+  rw[← addZeroes]
+  exact
+    Eq.symm
+      (ofBase_addZeroes (b + 2) ls.splitLeadZeros.1.length
+        (List.map (fun f ↦ ↑(f i)) ls.splitLeadZeros.2))
 
 theorem toNat_toWord (v: Fin m → ℕ) (b: ℕ) :
   toNat (toWord v b) = v := by
@@ -587,61 +725,3 @@ theorem toNat_toWord (v: Fin m → ℕ) (b: ℕ) :
     convert getDigits_of_zip (l := l) (stretchLen (mapToBase (b + 2) v)) this ?_
   rw[this]
   exact toNat_aux_of_stretchLen b v
-
-
-/- USELESS CODES
-def digits' (b: ℕ) (n: ℕ) (h: b > 1) : List (Fin b) :=
-  (Nat.digits b n).attach.map (fun x => ⟨x.1, Nat.digits_lt_base h x.2⟩)
-
-def zipToAlphabet (n : ℕ) (l : ℕ) (lss: List (List ℕ)) (hlss: lss.length = l) (hls : ∀ ls ∈ lss, ls.length = n) : List (Fin l → ℕ) :=
-  match n with
-  | 0 => []
-  | m+1 =>
-     (fun i =>
-       have : 0 < lss[i].length := by
-         rw[hls]
-         omega
-         refine List.mem_iff_get.mpr ?_
-         subst hlss
-         use i
-         rfl
-
-       lss[i][0]) :: (zipToAlphabet m l (lss.map (fun ls => ls.tail))
-        (by simp only [List.length_map, hlss]) (fun
-          | .nil => by
-            simp only [List.mem_map, List.length_nil, forall_exists_index, and_imp]
-            intro x hx
-            specialize hls x hx
-            rcases x
-            . simp only [List.length_nil, self_eq_add_left, AddLeftCancelMonoid.add_eq_zero,
-              one_ne_zero, and_false] at hls
-            . simp only [List.length_cons, add_left_inj] at hls
-              simp only [List.tail_cons]
-              intro h
-              simp only [h, List.length_nil] at hls
-              assumption
-          | .cons head tail => by
-            simp only [List.mem_map, List.length_cons, forall_exists_index, and_imp]
-            intro x hx h
-            specialize hls x hx
-            have : x.tail.length = m := by
-              have: x.length - 1 = m := by
-                omega
-              rw[← this]
-              apply tailLen x
-            rw[← this, h]
-            have hxtail := tailLen x.tail
-            rw[h, List.tail] at hxtail
-            have: (head :: tail).length > 0 := by simp
-            omega
-            ))
-
-def toBaseZip (b : ℕ) (l: List ℕ) : (List (Fin l.length → ℕ)) :=
-  let ls := mapToBase b l
-  let n := maxLen ls
-  let lss := stretchLen (ls)
-  zipToAlphabet n l.length lss (by simp only [mapToBase_length b l, stretchLen_length ls]) (by
-    intro ls hls
-    apply stretchLen_uniform
-    assumption)
--/

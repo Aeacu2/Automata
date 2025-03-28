@@ -183,70 +183,64 @@ theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (F
     . use (Fintype.card (ListND state) + k)
     . exact h'
 
--- theorem list_project_aux (x b : ℕ) (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) : reverseInput (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
---       simp_rw[← hl]
---       apply List.length_insertNth
---       omega
---     ))) = l := by
---   sorry
+theorem list_project_aux (x b : ℕ) (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) : reverseInput (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (sorry
+    ))) = l := by
 
--- theorem list_project (x b : ℕ) (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) : ∃ k, (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
---       simp_rw[← hl]
---       apply List.length_insertNth
---       omega
---     ))) = padZeros k (inputToBase (b+2) (by norm_num) l (by omega)) := by
+    sorry
 
---   have := inputToBase_of_reverseInput (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
---       simp_rw[← hl]
---       apply List.length_insertNth
---       omega
---     )))
---   rcases this with ⟨k, h⟩
---   use k
---   rw[h]
---   congr
---   exact list_project_aux x b l hl m
 
--- theorem correct_project [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len+1) → Fin (b+2)) state) (hres: dfa.respectZero):
---   (∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega))) → (project m dfa).fixLeadingZeros.eval (inputToBase (b+2) (by omega) l hl):= by
---   rw[NFA.fixLeadingZeros_eval]
---   intro h
---   rcases h with ⟨x, h⟩
---   have := eval_project dfa m (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega)) h
---   have lis := list_project x b l hl m
---   rcases lis with ⟨k, h₁⟩
---   rw[h₁] at this
---   apply (project m dfa).bounded_accept _
---   . apply project_acceptZero
---     exact DFA.acceptZero_of_respectZero dfa hres
---   swap
---   . exact padZeros k (inputToBase (b+2) (by norm_num) l (by omega))
---   . constructor
---     . use k
---     . exact this
+theorem list_project (x b : ℕ) (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) : ∃ k, (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by sorry
+    ))) = padZeros k (inputToBase (b+2) (by norm_num) l (by omega)) := by
 
--- theorem project_correct [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len+1) → Fin (b+2)) state) (hres: dfa.respectZero):
---   (project m dfa).fixLeadingZeros.eval (inputToBase (b+2) (by omega) l hl) → (∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by simp_rw[← hl]; apply List.length_insertNth; omega))):= by
+  have := inputToBase_of_reverseInput (List.map (fun f ↦ remove_index m f) (inputToBase (b + 2) (by norm_num) (List.insertNth m x l) (by
+      sorry
+    )))
+  rcases this with ⟨k, h⟩
+  use k
+  rw[h]
+  congr
+  exact list_project_aux x b l hl m
 
---   intro h
---   rw[NFA.fixLeadingZeros_eval] at h
---   rw[project_eval_iff] at h
---   rcases h with ⟨l₁, hlis, hdfa⟩
---   have : dfa.eval (inputToBase (b + 2) (by norm_num) (reverseInput l₁) (by exact reverseInput_length l₁)) := by
---     have := inputToBase_of_reverseInput l₁
---     rcases this with ⟨k, h⟩
---     rw[h] at hdfa
---     rw[DFA.respectZero] at hres
+theorem correct_project [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len+1) → Fin (b+2)) state) (hres: dfa.respectZero):
+  (∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by sorry))) → (project m dfa).fixLeadingZeros.eval (inputToBase (b+2) (by omega) l hl):= by
+  rw[NFA.fixLeadingZeros_eval]
+  intro h
+  rcases h with ⟨x, h⟩
+  have := eval_project dfa m (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by sorry)) h
+  have lis := list_project x b l hl m
+  rcases lis with ⟨k, h₁⟩
+  rw[h₁] at this
+  apply (project m dfa).bounded_accept _
+  . apply project_acceptZero
+    exact DFA.acceptZero_of_respectZero dfa hres
+  swap
+  . exact padZeros k (inputToBase (b+2) (by norm_num) l (by omega))
+  . constructor
+    . use k
+    . exact this
 
---     specialize hres (inputToBase (b + 2) (by norm_num) (reverseInput l₁) (by exact reverseInput_length l₁)) k
---     apply hres.mpr
---     exact hdfa
---   use (reverseInput l₁)[m]'(by have := reverseInput_length l₁; omega)
---   have h₁ : (List.insertNth (↑m) ((reverseInput l₁)[m]'(by have := reverseInput_length l₁; omega)) l) = reverseInput l₁ := by
+theorem project_correct [Fintype state] [DecidableEq state] (l : List ℕ) (hl : l.length = len)(m : Fin (len + 1)) (dfa : DFA (Fin (len+1) → Fin (b+2)) state) (hres: dfa.respectZero):
+  (project m dfa).fixLeadingZeros.eval (inputToBase (b+2) (by omega) l hl) → (∃ (x : ℕ), dfa.eval (inputToBase (b+2) (by norm_num) (l.insertNth m x) (by sorry))):= by
 
---     sorry
---   simp_rw[h₁]
---   exact this
+  intro h
+  rw[NFA.fixLeadingZeros_eval] at h
+  rw[project_eval_iff] at h
+  rcases h with ⟨l₁, hlis, hdfa⟩
+  have : dfa.eval (inputToBase (b + 2) (by norm_num) (reverseInput l₁) (by exact reverseInput_length l₁)) := by
+    have := inputToBase_of_reverseInput l₁
+    rcases this with ⟨k, h⟩
+    rw[h] at hdfa
+    rw[DFA.respectZero] at hres
+
+    specialize hres (inputToBase (b + 2) (by norm_num) (reverseInput l₁) (by exact reverseInput_length l₁)) k
+    apply hres.mpr
+    exact hdfa
+  use (reverseInput l₁)[m]'(by have := reverseInput_length l₁; omega)
+  have h₁ : (List.insertNth (↑m) ((reverseInput l₁)[m]'(by have := reverseInput_length l₁; omega)) l) = reverseInput l₁ := by
+
+    sorry
+  simp_rw[h₁]
+  exact this
 
 
 
