@@ -184,10 +184,12 @@ theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (F
     . exact h'
 
 theorem list_project (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : ∃ k, (List.map (fun f ↦ remove_index i f) (toWord (recover_value i x v) b)) = padZeros k (toWord v b) := by
-
-  have := toWord_toNat_exist (toWord (recover_value i x v) b)
-  rcases this with ⟨k, h⟩
-  rw[h]
+  let l₁ := (toWord (recover_value i x v) b).length
+  let l₂ := (toWord v b).length
+  use l₁ - l₂
+  simp[toWord]
+  
+  sorry
 
 
 theorem correct_project [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
@@ -196,6 +198,7 @@ theorem correct_project [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
   intro h
   rcases h with ⟨x, h⟩
   have := eval_project dfa i (toWord (recover_value i x v) b) h
+
   have lis := list_project x b v i
   rcases lis with ⟨k, h₁⟩
   rw[h₁] at this
