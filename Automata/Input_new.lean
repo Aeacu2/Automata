@@ -5,6 +5,7 @@ import Mathlib.Data.Nat.Digits
 import Init.Data.List.Lemmas
 import Automata.Replicate
 import Automata.LeadingZeros
+import Automata.Fin
 
 /-
 Major function: inputToBase
@@ -113,6 +114,10 @@ theorem toBase_ofBase' (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x 
 def addZeroes (n: ℕ) (l: List ℕ): List ℕ :=
   (List.replicate n 0) ++ l
 
+theorem addZeroes_succ (n: ℕ) (l: List ℕ) :
+  addZeroes (n+1) l = 0 :: addZeroes n l := by
+  simp only [addZeroes, List.replicate, List.cons_append]
+
 theorem addZeroes_elem :
   x ∈ (addZeroes n l) → x = 0 ∨ x ∈ l := by
   intro h
@@ -133,6 +138,10 @@ theorem addZeroes_zero (n: ℕ) (l: List ℕ) (hi : i < n):
   simp only [addZeroes]
   apply List.getElem_of_replicate_append_left
   exact hi
+
+theorem addZeroes_addZeroes (n m: ℕ) (l: List ℕ) :
+  addZeroes n (addZeroes m l) = addZeroes (n + m) l := by
+  simp[addZeroes, List.replicate, ← List.append_assoc]
 
 theorem ofBase_addZeroes (b: ℕ) (n: ℕ) (l: List ℕ) :
   ofBase b (addZeroes n l) = ofBase b l := by
@@ -444,6 +453,28 @@ def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hl
 theorem zip_nil (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = 0) :
   zip ls hlb hls = [] := by
   simp[zip]
+
+theorem padZeros_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l) :
+  padZeros k (zip ls hlb hls) = @zip m b (l+k) (fun i => (addZeroes k) (ls i)) (by
+    intro i x hx
+    simp only at hx
+    rcases addZeroes_elem hx
+    . omega
+    . apply hlb
+      assumption
+  ) (by
+    intro i
+    simp only
+    rw[addZeroesLength]
+    specialize hls i
+    omega
+  ) := by
+  induction k
+  case zero => simp[padZeros, addZeroes]
+  case succ k ih =>
+    simp_rw[addZeroes_succ, padZeros_succ]
+    simp only [zip, List.getElem_cons_zero, Fin.zero_eta, Nat.add_eq, List.tail_cons, List.cons.injEq, true_and]
+    exact ih
 
 def toWord (v: Fin m → ℕ) (b: ℕ) : List (Fin m → Fin (b + 2)) :=
   zip (stretchLen (mapToBase (b + 2) v)) (by

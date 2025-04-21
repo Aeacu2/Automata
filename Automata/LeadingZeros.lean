@@ -8,6 +8,9 @@ import Automata.Pumping
 def padZeros (m : ℕ) (x : List (Fin n → Fin (b+2))) : List (Fin n → Fin (b+2)) :=
   List.replicate m (fun _ => 0) ++ x
 
+def padZeros_succ (m : ℕ) (x : List (Fin n → Fin (b+2))) : padZeros (m + 1) x = (fun _ => 0) :: padZeros m x := by
+  simp only [padZeros, List.replicate, List.cons_append]
+
 theorem padZeros_add (a b : ℕ) (x : List (Fin n → Fin (k+2))) : padZeros a (padZeros b x) = padZeros (a + b) x := by
   simp only [padZeros]
   rw[← List.append_assoc, List.replicate_append_add]
