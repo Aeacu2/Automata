@@ -450,6 +450,12 @@ def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hl
         (by apply zipTailHlb; exact hlb)
         (by apply zipTailHls; exact hls))
 
+theorem zip_cons (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l + 1) :
+  zip ls hlb hls = (fun i => ⟨(ls i)[0]'(by specialize hls i; omega), by apply hlb; exact List.getElem_mem (by rw[hls]; omega)⟩) :: zip (fun i => (ls i).tail)
+    (by apply zipTailHlb; exact hlb)
+    (by apply zipTailHls; exact hls) := by
+  simp[zip]
+
 theorem zip_nil (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = 0) :
   zip ls hlb hls = [] := by
   simp[zip]
