@@ -183,72 +183,6 @@ theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (F
     . use (Fintype.card (ListND state) + k)
     . exact h'
 
--- theorem word_project_aux (x b : ℕ) (v : Fin m → ℕ) (i : Fin (m + 1)) : (List.map (fun f ↦ remove_index i f) (toWord (recover_value i x v) b)) = zip (remove_index i (stretchLen (mapToBase (b + 2) (recover_value i x v)))) (by
---     intro j
---     apply stretchLen_of_mapToBase_lt_base
---     norm_num
---   ) (by
---     intro i
---     apply stretchLen_uniform
---   ):= by
---   simp[toWord]
---   have uniform := stretchLen_uniform (mapToBase (b + 2) (recover_value i x v))
---   generalize h : (stretchLen (mapToBase (b + 2) (recover_value i x v)) 0).length = l
---   induction' l with l ih
---   . have Len0 : ∀ j : Fin (m+1), (stretchLen (mapToBase (b + 2) (recover_value i x v)) j).length = 0 := by
---       have := uniform 0
---       simp[h] at this
---       intro j
---       simp_all only
---     have : (stretchLen (mapToBase (b + 2) (recover_value i x v))) =
---       fun j ↦ [] := by
---       funext j
---       exact List.length_eq_zero.mp (Len0 j)
---     simp[this]
---     have : maxLenFin (stretchLen (mapToBase (b + 2) (recover_value i x v))) ≤ 0 := by
---       apply maxLenFin_le
---       intro j
---       exact List.drop_eq_nil_iff.mp (congrArg (List.drop 0) (congrFun this j))
---     have : maxLenFin (stretchLen (mapToBase (b + 2) (recover_value i x v))) = 0 := by
---       exact Nat.eq_zero_of_le_zero this
---     have := zip_nil (stretchLen (mapToBase (b + 2) (recover_value i x v))) (by
---     intro j
---     apply stretchLen_of_mapToBase_lt_base
---     norm_num) Len0
---     have := @zip_nil m b (remove_index i fun j ↦ []) (by
---       intro i x
---       simp[remove_index, Fin.removeNth]
---     ) (by
---       intro j
---       simp[remove_index, Fin.removeNth]
---     )
---     simp_all
---   . have hlsL: ∀ j : Fin (m+1), (stretchLen (mapToBase (b + 2) (recover_value i x v)) j).length = l+1 := by
---       have := uniform (l + 1)
---       simp[h] at this
---       intro j
---       simp_all only
---     have maxLenL : maxLenFin (stretchLen (mapToBase (b + 2) (recover_value i x v))) = l + 1 := by
---       rcases maxLenFin_exist (stretchLen (mapToBase (b + 2) (recover_value i x v))) (by norm_num) with ⟨j, h⟩
---       simp_all only [forall_const]
---     have consL := zip_cons (stretchLen (mapToBase (b + 2) (recover_value i x v))) (by intro j; apply stretchLen_of_mapToBase_lt_base; norm_num) (hlsL)
---     -- simp_all
---     have hlsR : ∀ j : Fin m, ((remove_index i (stretchLen (mapToBase (b + 2) (recover_value i x v)))) j).length = l+1 := by
---       intro j
---       simp[remove_index, Fin.removeNth]
---       exact hlsL (i.succAbove j)
---     by_cases hm: m = 0
---     . sorry
---     .
---       have maxLenR : maxLenFin (remove_index i (stretchLen (mapToBase (b + 2) (recover_value i x v)))) = l + 1 := by
---         rcases maxLenFin_exist (remove_index i (stretchLen (mapToBase (b + 2) (recover_value i x v)))) (by omega) with ⟨j, h⟩
---         simp_all only [forall_const]
---       have consR := zip_cons (remove_index i (stretchLen (mapToBase (b + 2) (recover_value i x v)))) (by intro j; apply stretchLen_of_mapToBase_lt_base; norm_num) (hlsR)
---       have : (stretchLen (mapToBase (b + 2) (recover_value i x v)) 0).tail.length = l := by
---         exact zipTailHls (stretchLen (mapToBase (b + 2) (recover_value i x v))) hlsL 0
---       simp_all
---       sorry
-
 theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (i : Fin (m + 1)) (hls : ∀ i, (ls i).length = l) (hlb: ∀ i, ∀ x ∈ ls i, x < b+2) : (List.map (fun f ↦ remove_index i f) (zip ls hlb hls)) = zip (remove_index i (ls)) (by
     intro j x hx
     simp[remove_index, Fin.removeNth] at hx
@@ -371,21 +305,23 @@ theorem correct_project [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
     . exact this
 
 theorem project_correct [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
-  (project m dfa).fixLeadingZeros.eval (toWord v b) → (∃ (x : ℕ), dfa.eval (toWord (recover_value i x l) b)) := by
+  (project i dfa).fixLeadingZeros.eval (toWord v b) → (∃ (x : ℕ), dfa.eval (toWord (recover_value i x v) b)) := by
   intro h
   rw[NFA.fixLeadingZeros_eval] at h
   rw[project_eval_iff] at h
-  rcases h with ⟨l₁, hlis, hdfa⟩
-  have : dfa.eval (toWord (toNat l₁) b) := by
-    have := toWord_toNat_exist l₁
+  rcases h with ⟨w, hlis, hdfa⟩
+  have : dfa.eval (toWord (toNat w) b) := by
+    have := toWord_toNat_exist w
     rcases this with ⟨k, h⟩
     rw[h] at hdfa
     rw[DFA.respectZero] at hres
-    specialize hres (toWord (toNat l₁) b) k
+    specialize hres (toWord (toNat w) b) k
     apply hres.mpr
     exact hdfa
-  use (toNat l₁) i
-  have h₁ : (recover_value i ((toNat l₁) i) l) = toNat l₁ := by
+
+  use (toNat w) i
+  have h₁ : (recover_value i ((toNat w) i) v) = toNat w := by
+
     sorry
   simp_rw[h₁]
   exact this
