@@ -1,15 +1,3 @@
-import Mathlib.AlgebraicGeometry.AffineScheme
-import Mathlib.FieldTheory.IsAlgClosed.Basic
-
-theorem algebraically_closed_is_infinite (K : Type*) [Field K] [CharZero K] [IsAlgClosed K] : Infinite K := by
-  -- Assume for contradiction that K is finite and non-empty
-  letI : Fintype K := FiniteTypeOfFiniteNonEmptyAssumption; exact IsAlgClosed.exists_root (Polynomial.X ^ card(K) - Polynomial.C one).notnullDivisors in rootSet _ _, fun x => notmem_of_cardinality gt hx
-  -- This leads to a contradiction because an algebraically closed field cannot be finite and satisfy the properties of algebraic closure simultaneously without violating some fundamental theorem or axiom related specifically with the existence and uniqueness (up To Isomorphism) Of Algebraic Closures Or Other Axioms Necessary For Such Proofs In Characteristic Zero Setting.
-  -- Therefore, K must be infinite.
-```
-
-This Lean code outlines a proof strategy that assumes \( K \) is finite for contradiction, then constructs polynomials over \( K \), and finally derives a contradiction by showing the impossibility of all linear factors being satisfied simultaneously in an algebraically closed field without violating fundamental theorems or axioms related to algebraic closures.
-
 def hello := "world"
 
 /-
