@@ -1,7 +1,7 @@
 import Mathlib.Tactic
 import Automata.DFA
-import Automata.Input
-import Automata.Equality
+import Automata.Input_new
+import Automata.Equality_new
 import Automata.Fin
 
 
@@ -20,7 +20,8 @@ theorem collapse_transFrom (dfa : DFA (Fin (n + 1) → α) state) (i : Fin (n + 
     simp_all only [List.map_nil]
     rfl
   case cons x xs ih =>
-    simp_all only [collapse, DFAO.transFrom]
+    simp_all only [collapse, List.map_cons, DFAO.transFrom]
+
 
 theorem collapse_evalFrom (dfa : DFA (Fin (n + 1) → α) state) (i : Fin (n + 1)) (k: Fin n) (l : List (Fin n → α)) (s : state)
   : dfa.evalFrom (l.map (recover_index i k)) s = (collapse i k dfa).evalFrom l s := by
@@ -30,43 +31,49 @@ theorem collapse_evalFrom (dfa : DFA (Fin (n + 1) → α) state) (i : Fin (n + 1
 theorem collapse_eval (dfa : DFA (Fin (n + 1) → α) state) (i : Fin (n + 1)) (k: Fin n) (l : List (Fin n → α))
   : dfa.eval (l.map (recover_index i k)) = (collapse i k dfa).eval l := collapse_evalFrom dfa i k l dfa.start
 
-theorem collapse_correct (dfa : DFA (Fin (n + 1) → Fin (b + 2)) state) (l : List ℕ) (i : Fin (n + 1)) (k: Fin n)  (hlLen : l.length = n + 1) (hl : l[i] = l[k]) (hik : i.val > k.val) :
-  dfa.eval (inputToBase (b + 2) (by omega) l (hlLen)) = (collapse i k dfa).eval (((inputToBase (b + 2) (by omega) l (hlLen))).map (remove_index i)) := by
+theorem collapse_correct (dfa : DFA (Fin (n + 1) → Fin (b + 2)) state) (l : Fin (n+1) → ℕ) (i : Fin (n + 1)) (k: Fin n)  (hl : l i = l k) (hik : i.val > k.val) :
+  dfa.eval (toWord l b) = (collapse i k dfa).eval ((toWord l b).map (remove_index i)) := by
   rw[← collapse_eval]
   congr
 
-  have := @eqInput_if_equal (n+1) (b) l hlLen ⟨i, by omega⟩ ⟨k, by omega⟩ hl
+  have := @eqInput_if_equal (n+1) (b) l i k
 
   simp only [List.map_map]
-  suffices : ∀ v ∈ (inputToBase (b + 2) _ l hlLen), (recover_index i k ∘ remove_index i) v = v
+  suffices : ∀ v ∈ toWord l b, (recover_index i k ∘ remove_index i) v = v
   .
     ext j v
     constructor
     . intro h
       simp_all
       apply this
-      exact List.getElem?_mem h
+      exact List.mem_of_getElem? h
     . intro h
       simp_all
       rcases h with ⟨v', ⟨h₁, h₂⟩⟩
       rw[h₁, ← this v', h₂]
-      . exact List.getElem?_mem h₁
+      . exact List.mem_of_getElem? h₁
 
   intro v hv
   dsimp only [Function.comp_apply]
   -- rw[recover_remove]
   rw[recover_index, insert_remove]
   rw[remove_index, Fin.removeNth, Fin.succAbove, Fin.castSucc, Fin.castAdd, Fin.castLE]
+  specialize this hl v
   split;
-  specialize this v hv
-  .
-    simp_all only [Fin.getElem_fin, gt_iff_lt, Fin.eta]
+  . simp_all only [Fin.getElem_fin, gt_iff_lt, Fin.eta]
     ext : 1
     simp_all only
+    congr
+    simp_all only [Fin.coe_eq_castSucc, forall_const]
+    rfl
   . rename_i h
     have : ¬ k.val < i := by
       apply h
     simp_all only [Fin.getElem_fin, gt_iff_lt]
+
+theorem collapse_respectZero (dfa : DFA (Fin (n + 1) → Fin (b + 2)) state) (i : Fin (n + 1)) (k: Fin n) (hdfa : dfa.respectZero) :
+  (collapse i k dfa).respectZero := by
+  sorry
 
 
 -- Legacy

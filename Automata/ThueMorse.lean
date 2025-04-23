@@ -2,7 +2,7 @@ import Mathlib.Tactic
 import Mathlib.Data.List.Basic
 import Automata.DFA
 import Automata.NFA
-import Automata.Input
+import Automata.Input_new
 import Mathlib.Data.Nat.Digits
 
 
