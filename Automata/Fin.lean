@@ -29,13 +29,13 @@ variable (i : Fin (n + 1)) (a : α) (f : Fin n → α) (j : Fin (n + 1))
 
 end
 def recover_index (i : Fin (n + 1)) (k: Fin n) (f: Fin n → α):
-  (Fin (n + 1) → α) := Fin.insert i (f k) f
+  (Fin (n + 1) → α) := Fin.insertNth i (f k) f
 
 
 def recover_value' (i : Fin (n + 1)) (x : α) (f: Fin n → α) :
- (Fin (n + 1) → α) := Fin.insert i x f
+ (Fin (n + 1) → α) := Fin.insertNth i x f
 
-def recover_value := @Fin.insert
+def recover_value := @Fin.insertNth
 
 @[simp] theorem remove_insert (i : Fin (n + 1)) (f: Fin n → α) :
   remove_index i (Fin.insert i a f) = f := by

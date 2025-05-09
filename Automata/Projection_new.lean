@@ -12,25 +12,25 @@ import Automata.Fin
 def project (m : Fin (n+1)) (dfa : DFA (Fin (n+1) → Fin (b+2)) state) [DecidableEq state] :
   NFA (Fin n → Fin (b+2)) state := {
   transition :=
-  fun a q => ⟨(List.map (fun (x : Fin (b+2)) => dfa.transition (recover_value m x a) q)
+  fun a q => ⟨(List.map (fun (x : Fin (b+2)) => dfa.transition (Fin.insertNth m x a) q)
     (FinEnum.toList (Fin (b+2)))).dedup, by apply List.nodup_dedup⟩
   start := ⟨[dfa.start], List.nodup_singleton dfa.start⟩
   output := dfa.output
 }
 
--- theorem transition_project' [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin (n+1) → Fin (b+2))) (p q : state) : dfa.transition f p = q → q ∈ ((project m dfa).transition (remove_index m f) p).val := by
+-- theorem transition_project' [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin (n+1) → Fin (b+2))) (p q : state) : dfa.transition f p = q → q ∈ ((project m dfa).transition (Fin.removeNth m f) p).val := by
 --   simp only [project, List.mem_dedup, List.mem_map, FinEnum.mem_toList, true_and]
 --   intro h
 --   use f m
---   simp[recover_value, insert_remove]
+--   simp[Fin.insertNth, insert_remove]
 --   exact h
 
-theorem transition_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin (n+1) → Fin (b+2))) (p : state) : dfa.transition f p ∈ ((project m dfa).transition (remove_index m f) p).val := by
+theorem transition_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin (n+1) → Fin (b+2))) (p : state) : dfa.transition f p ∈ ((project m dfa).transition (Fin.removeNth m f) p).val := by
   simp only [project, List.mem_dedup, List.mem_map, FinEnum.mem_toList, true_and]
   use f m
-  simp[recover_value, insert_remove]
+  simp[Fin.insertNth, ]
 
-theorem transFrom_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin (n+1) → Fin (b+2))) (p q : state) : dfa.transFrom l p = q → q ∈ ((project m dfa).transFrom (l.map (fun f => remove_index m f)) ⟨[p], by exact List.nodup_singleton p⟩).val := by
+theorem transFrom_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin (n+1) → Fin (b+2))) (p q : state) : dfa.transFrom l p = q → q ∈ ((project m dfa).transFrom (l.map (fun f => Fin.removeNth m f)) ⟨[p], by exact List.nodup_singleton p⟩).val := by
   intro h
   induction l generalizing p
   case nil =>
@@ -42,13 +42,13 @@ theorem transFrom_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+
     simp[DFAO.transFrom] at h
     simp[NFA.transFrom, NFA.transList]
     specialize ih (dfa.transition f p) h
-    have := NFA.transFrom_sublist (ps := ⟨[dfa.transition f p], by exact List.nodup_singleton (dfa.transition f p)⟩) (project m dfa) (List.map (fun f ↦ remove_index m f) fs) ⟨(((project m dfa).transition (remove_index m f) p).val).dedup, by apply List.nodup_dedup⟩
+    have := NFA.transFrom_sublist (ps := ⟨[dfa.transition f p], by exact List.nodup_singleton (dfa.transition f p)⟩) (project m dfa) (List.map (fun f ↦ Fin.removeNth m f) fs) ⟨(((project m dfa).transition (Fin.removeNth m f) p).val).dedup, by apply List.nodup_dedup⟩
     apply this
     . simp only [List.cons_subset, List.mem_dedup, List.nil_subset, and_true]
       apply transition_project
     . assumption
 
-theorem evalFrom_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin (n+1) → Fin (b+2))) (p : state) : dfa.evalFrom l p → (project m dfa).evalFrom (l.map (fun f => remove_index m f)) ⟨[p], by exact List.nodup_singleton p⟩ := by
+theorem evalFrom_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin (n+1) → Fin (b+2))) (p : state) : dfa.evalFrom l p → (project m dfa).evalFrom (l.map (fun f => Fin.removeNth m f)) ⟨[p], by exact List.nodup_singleton p⟩ := by
   simp[NFA.evalFrom, DFAO.evalFrom]
   intro h
   use (DFAO.transFrom dfa l p)
@@ -58,23 +58,23 @@ theorem evalFrom_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2
   . simp only [project]
     exact h
 
-theorem eval_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin (n+1) → Fin (b+2))) : dfa.eval l → (project m dfa).eval (l.map (fun f => remove_index m f)) := by
+theorem eval_project [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin (n+1) → Fin (b+2))) : dfa.eval l → (project m dfa).eval (l.map (fun f => Fin.removeNth m f)) := by
   simp[NFA.eval, DFAO.eval]
   exact evalFrom_project dfa m l dfa.start
 
--- theorem project_transition' [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin n → Fin (b+2))) (p q : state) : q ∈ ((project m dfa).transition f p).val → ∃ f₁, f = remove_index m f₁ ∧ dfa.transition f₁ p = q := by
+-- theorem project_transition' [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin n → Fin (b+2))) (p q : state) : q ∈ ((project m dfa).transition f p).val → ∃ f₁, f = Fin.removeNth m f₁ ∧ dfa.transition f₁ p = q := by
 --   simp only [project, List.mem_dedup, List.mem_map, FinEnum.mem_toList, true_and]
 --   intro h
 --   rcases h with ⟨a, h'⟩
---   use recover_value m a f
+--   use Fin.insertNth m a f
 --   constructor
---   . simp only [recover_value, remove_insert]
+--   . simp only [Fin.insertNth, remove_insert]
 --   . exact h'
 
-theorem project_transition [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin n → Fin (b+2))) (p q : state) : q ∈ ((project m dfa).transition f p).val → ∃ a, dfa.transition (recover_value m a f) p = q := by
+theorem project_transition [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (f : (Fin n → Fin (b+2))) (p q : state) : q ∈ ((project m dfa).transition f p).val → ∃ a, dfa.transition (Fin.insertNth m a f) p = q := by
   simp only [project, List.mem_dedup, List.mem_map, FinEnum.mem_toList, true_and, imp_self]
 
-theorem project_transFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) (q : state) (states : ListND state) : q ∈ ((project m dfa).transFrom l states).val → ∃ p ∈ states.val, ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (remove_index m) ∧ dfa.transFrom l₁ p = q:= by
+theorem project_transFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) (q : state) (states : ListND state) : q ∈ ((project m dfa).transFrom l states).val → ∃ p ∈ states.val, ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (Fin.removeNth m) ∧ dfa.transFrom l₁ p = q:= by
   intro h
   induction l generalizing states
   case nil =>
@@ -95,13 +95,13 @@ theorem project_transFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+
     . exact h₅
     . have h₇ := project_transition dfa m f p' p h₆
       rcases h₇ with ⟨a, h₈⟩
-      use (recover_value m a f) :: l₁
+      use (Fin.insertNth m a f) :: l₁
       constructor
-      . simp only [recover_value, List.map_cons, remove_insert, List.cons.injEq, true_and]
-        simp only [h₂, remove_index]
+      . simp only [List.map_cons, Fin.removeNth_insertNth, List.cons.injEq, true_and]
+        simp only [h₂, Fin.removeNth]
       . aesop
 
-theorem project_evalFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) (states : ListND state) : (project m dfa).evalFrom l states → ∃ p ∈ states.val, ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (remove_index m) ∧ dfa.evalFrom l₁ p:= by
+theorem project_evalFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) (states : ListND state) : (project m dfa).evalFrom l states → ∃ p ∈ states.val, ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (Fin.removeNth m) ∧ dfa.evalFrom l₁ p:= by
   intro h
   simp_all [NFA.evalFrom, DFAO.evalFrom]
   rcases h with ⟨p, h₁, h₂⟩
@@ -116,7 +116,7 @@ theorem project_evalFrom [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2
     . simp only [project] at h₂
       simp only [h₇, h₂]
 
-theorem project_eval [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : (project m dfa).eval l → ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (remove_index m) ∧ dfa.eval l₁ := by
+theorem project_eval [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : (project m dfa).eval l → ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (Fin.removeNth m) ∧ dfa.eval l₁ := by
   simp[NFA.eval, DFAO.eval]
   have h := project_evalFrom dfa m l (project m dfa).start
   intro h₁
@@ -125,7 +125,7 @@ theorem project_eval [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) s
   simp[project] at h₂
   aesop
 
-theorem project_eval_iff [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : (project m dfa).eval l ↔ ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (remove_index m) ∧ dfa.eval l₁ := by
+theorem project_eval_iff [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : (project m dfa).eval l ↔ ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (Fin.removeNth m) ∧ dfa.eval l₁ := by
   constructor
   . exact project_eval dfa m l
   . intro h
@@ -149,12 +149,10 @@ theorem project_acceptZero [DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (
   use (padZeros k l₁)
   constructor
   . simp only [padZeros, List.map_append, List.map_replicate]
-    have: List.replicate k (remove_index m (fun _ ↦ 0 : Fin (n+1) → Fin (b+2))) ++ List.map (remove_index m) l₁ = List.replicate k (fun _ ↦ 0) ++ List.map (remove_index m) l₁ := by
+    have: List.replicate k (Fin.removeNth m (fun _ ↦ 0 : Fin (n+1) → Fin (b+2))) ++ List.map (Fin.removeNth m) l₁ = List.replicate k (fun _ ↦ 0) ++ List.map (Fin.removeNth m) l₁ := by
       simp only [List.append_cancel_right_eq, List.replicate_inj, true_and]
       right
-      simp only [remove_index]
-      ext x
-      simp only [Fin.removeNth, Fin.val_zero]
+      rfl
     simp only [h₃, this]
   . exact h
 
@@ -183,9 +181,9 @@ theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (F
     . use (Fintype.card (ListND state) + k)
     . exact h'
 
-theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (i : Fin (m + 1)) (hls : ∀ i, (ls i).length = l) (hlb: ∀ i, ∀ x ∈ ls i, x < b+2) : (List.map (fun f ↦ remove_index i f) (zip ls hlb hls)) = zip (remove_index i (ls)) (by
+theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (i : Fin (m + 1)) (hls : ∀ i, (ls i).length = l) (hlb: ∀ i, ∀ x ∈ ls i, x < b+2) : (List.map (fun f ↦ Fin.removeNth i f) (zip ls hlb hls)) = zip (Fin.removeNth i (ls)) (by
     intro j x hx
-    simp[remove_index, Fin.removeNth] at hx
+    simp[Fin.removeNth, Fin.removeNth] at hx
     apply hlb
     exact hx
   ) (by
@@ -197,7 +195,7 @@ theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (i : Fin (m + 
     have : ls = fun j ↦ [] := by
       funext j
       exact List.length_eq_zero.mp (hls j)
-    simp_all only [remove_index, zip_nil, List.map_nil]
+    simp_all only [Fin.removeNth, zip_nil, List.map_nil]
   . simp[zip]
     constructor
     swap
@@ -206,15 +204,15 @@ theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (i : Fin (m + 
       specialize ih (fun j => (ls j).tail) hls'
       have hlb' : ∀ i, ∀ x ∈ (ls i).tail, x < b+2 := by
         intro i x hx
-        simp[remove_index, Fin.removeNth] at hx
+        simp[Fin.removeNth, Fin.removeNth] at hx
         apply hlb
         exact List.mem_of_mem_tail hx
       specialize ih hlb'
       exact ih
-    . simp[remove_index, Fin.removeNth]
+    . simp[Fin.removeNth, Fin.removeNth]
       constructor
 
-theorem word_project_aux (x b : ℕ) (v : Fin m → ℕ) (i : Fin (m + 1)) : (List.map (fun f ↦ remove_index i f) (toWord (recover_value i x v) b)) = zip (remove_index i (stretchLen (mapToBase (b + 2) (recover_value i x v)))) (by
+theorem word_project_aux (x b : ℕ) (v : Fin m → ℕ) (i : Fin (m + 1)) : (List.map (fun f ↦ Fin.removeNth i f) (toWord (Fin.insertNth i x v) b)) = zip (Fin.removeNth i (stretchLen (mapToBase (b + 2) (Fin.insertNth i x v)))) (by
     intro j
     apply stretchLen_of_mapToBase_lt_base
     norm_num
@@ -224,10 +222,10 @@ theorem word_project_aux (x b : ℕ) (v : Fin m → ℕ) (i : Fin (m + 1)) : (Li
   ):= by
   simp[toWord]
   exact
-    word_project_aux' b (stretchLen (mapToBase (b + 2) (recover_value i x v))) i
-      (toWord.proof_2 (recover_value i x v) b) (toWord.proof_1 (recover_value i x v) b)
+    word_project_aux' b (stretchLen (mapToBase (b + 2) (Fin.insertNth i x v))) i
+      (toWord.proof_2 (Fin.insertNth i x v) b) (toWord.proof_1 (Fin.insertNth i x v) b)
 
-theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : maxLenFin (mapToBase (b + 2) v) ≤ maxLenFin (mapToBase (b + 2) (recover_value i x v)) := by
+theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : maxLenFin (mapToBase (b + 2) v) ≤ maxLenFin (mapToBase (b + 2) (Fin.insertNth i x v)) := by
   apply maxLenFin_le
   intro j
   rw[maxLenFin]
@@ -236,7 +234,7 @@ theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : m
   by_cases h: j.val < i.val
   . use j
     congr
-    simp only [recover_value, Fin.insert, Fin.insertNth, Fin.succAboveCases, Fin.coe_eq_castSucc,
+    simp only [Fin.insertNth, Fin.insert, Fin.insertNth, Fin.succAboveCases, Fin.coe_eq_castSucc,
       Fin.castSucc, Fin.castAdd, Fin.castLE, eq_rec_constant, Fin.is_lt, Fin.castPred_mk, Fin.eta]
     split
     . rename_i h'
@@ -252,7 +250,7 @@ theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : m
   . use ⟨j.val + 1, by omega⟩
     simp only [not_lt] at h
     congr
-    simp only [recover_value, Fin.insert, Fin.insertNth, Fin.succAboveCases, Int.reduceNeg, id_eq,
+    simp only [Fin.insertNth, Fin.insert, Fin.insertNth, Fin.succAboveCases, Int.reduceNeg, id_eq,
       Int.Nat.cast_ofNat_Int, eq_rec_constant]
     split
     . rename_i h'
@@ -266,8 +264,8 @@ theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : m
         omega
       . simp only [Fin.pred, Fin.subNat_mk, add_tsub_cancel_right, Fin.eta]
 
-theorem word_project (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : ∃ k, (List.map (fun f ↦ remove_index i f) (toWord (recover_value i x v) b)) = padZeros k (toWord v b) := by
-  use maxLenFin (mapToBase (b + 2) (recover_value i x v)) - maxLenFin (mapToBase (b + 2) v)
+theorem word_project (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : ∃ k, (List.map (fun f ↦ Fin.removeNth i f) (toWord (Fin.insertNth i x v) b)) = padZeros k (toWord v b) := by
+  use maxLenFin (mapToBase (b + 2) (Fin.insertNth i x v)) - maxLenFin (mapToBase (b + 2) v)
   rw[word_project_aux, toWord]
   rw[padZeros_zip]
   have len := maxLenFin_recover x b v i
@@ -276,21 +274,21 @@ theorem word_project (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : ∃ k,
   . funext j
     simp[stretchLen, addZeroes_addZeroes]
     have := len_le_maxLenFin (mapToBase (b + 2) v) j
-    have : (maxLenFin (mapToBase (b + 2) (recover_value i x v)) - maxLenFin (mapToBase (b + 2) v) +
-      (maxLenFin (mapToBase (b + 2) v) - (mapToBase (b + 2) v j).length)) = maxLenFin (mapToBase (b + 2) (recover_value i x v)) - (mapToBase (b + 2) v j).length := by omega
+    have : (maxLenFin (mapToBase (b + 2) (Fin.insertNth i x v)) - maxLenFin (mapToBase (b + 2) v) +
+      (maxLenFin (mapToBase (b + 2) v) - (mapToBase (b + 2) v j).length)) = maxLenFin (mapToBase (b + 2) (Fin.insertNth i x v)) - (mapToBase (b + 2) v j).length := by omega
     rw[this]
     clear this; clear this
-    simp only [remove_index, Fin.removeNth, stretchLen, mapToBase]
+    simp only [Fin.removeNth, Fin.removeNth, stretchLen, mapToBase]
     congr
-    . simp only [recover_value, Fin.insert, Fin.insertNth_apply_succAbove]
-    . simp only [recover_value, Fin.insert, Fin.insertNth_apply_succAbove]
+    . simp only [Fin.insertNth_apply_succAbove]
+    . simp only [Fin.insertNth_apply_succAbove]
 
 theorem correct_project [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
-  (∃ (x : ℕ), dfa.eval (toWord (recover_value i x v) b)) → (project i dfa).fixLeadingZeros.eval (toWord v b) := by
+  (∃ (x : ℕ), dfa.eval (toWord (Fin.insertNth i x v) b)) → (project i dfa).fixLeadingZeros.eval (toWord v b) := by
   rw[NFA.fixLeadingZeros_eval]
   intro h
   rcases h with ⟨x, h⟩
-  have := eval_project dfa i (toWord (recover_value i x v) b) h
+  have := eval_project dfa i (toWord (Fin.insertNth i x v) b) h
 
   have lis := word_project x b v i
   rcases lis with ⟨k, h₁⟩
@@ -304,13 +302,13 @@ theorem correct_project [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
     . use k
     . exact this
 
-theorem project_word (w: List (Fin (l+1) → Fin (b+2))) (i : Fin (l + 1)) : (toNat (List.map (remove_index i) w)) = remove_index i (toNat w) := by
+theorem project_word (w: List (Fin (l+1) → Fin (b+2))) (i : Fin (l + 1)) : (toNat (List.map (Fin.removeNth i) w)) = Fin.removeNth i (toNat w) := by
   funext j
-  simp only [toNat, toNat_aux, getDigits, remove_index, List.map_map, Fin.removeNth]
+  simp only [toNat, toNat_aux, getDigits, Fin.removeNth, List.map_map, Fin.removeNth]
   rfl
 
 theorem project_correct [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
-  (project i dfa).fixLeadingZeros.eval (toWord v b) → (∃ (x : ℕ), dfa.eval (toWord (recover_value i x v) b)) := by
+  (project i dfa).fixLeadingZeros.eval (toWord v b) → (∃ (x : ℕ), dfa.eval (toWord (Fin.insertNth i x v) b)) := by
   intro h
   rw[NFA.fixLeadingZeros_eval] at h
   rw[project_eval_iff] at h
@@ -324,7 +322,7 @@ theorem project_correct [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
     apply hres.mpr
     exact hdfa
   use (toNat w) i
-  have htoNat: toNat (padZeros (Fintype.card (ListND state)) (toWord v b)) = toNat (List.map (remove_index i) w) := by
+  have htoNat: toNat (padZeros (Fintype.card (ListND state)) (toWord v b)) = toNat (List.map (Fin.removeNth i) w) := by
     rw[hlis]
   simp only [toNat, toWord, padZeros_zip, stretchLen, addZeroes_addZeroes,
     getDigits_of_zip] at htoNat
@@ -333,16 +331,17 @@ theorem project_correct [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
     simp only [toNat_aux, mapToBase, ofBase_addZeroes, ofBase_toBase]
   rw[htoNatAddZero, ← toNat] at htoNat
   clear htoNatAddZero
-  have h₁ : (recover_value i ((toNat w) i) v) = toNat w := by
+  have h₁ : (Fin.insertNth i ((toNat w) i) v) = toNat w := by
     funext j
     rw[htoNat, project_word]
-    simp only [recover_value, Fin.insert, remove_index, Fin.insertNth_removeNth,
+    simp only [Fin.insertNth, Fin.insert, Fin.removeNth, Fin.insertNth_removeNth,
       Function.update_eq_self]
+    simp only [Fin.succAbove_cases_eq_insertNth, Fin.insertNth_removeNth, Function.update_eq_self]
   simp_rw[h₁]
   exact this
 
 theorem project_iff [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
-  (project i dfa).fixLeadingZeros.eval (toWord v b) ↔ (∃ (x : ℕ), dfa.eval (toWord (recover_value i x v) b)) := by
+  (project i dfa).fixLeadingZeros.eval (toWord v b) ↔ (∃ (x : ℕ), dfa.eval (toWord (Fin.insertNth i x v) b)) := by
   constructor
   . exact fun a ↦ project_correct v i dfa hres a
   . exact fun a ↦ correct_project v i dfa hres a

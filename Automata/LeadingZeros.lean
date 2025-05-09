@@ -255,7 +255,6 @@ theorem NFA.fixLeadingZeros_transFrom [Fintype state] [DecidableEq state] (nfa :
     rw[NFA.transFrom_of_append, padZeros]
     rfl
 
-
 theorem NFA.fixLeadingZeros_eval [Fintype state] [DecidableEq state] (nfa : NFA (Fin n → Fin (b+2)) state) (x : List (Fin n → Fin (b+2))) : (nfa.fixLeadingZeros).eval x = nfa.eval (padZeros (Fintype.card (ListND state)) x) := by
   simp only [NFA.eval, NFA.evalFrom]
   rw[NFA.fixLeadingZeros_transFrom]
