@@ -59,7 +59,6 @@ theorem DFAO.transFrom_split [Fintype state] {dfao : DFAO α state out} {x : Lis
   rwa [← hq, ← transFrom_of_append, ← transFrom_of_append, ← List.append_assoc,
     List.take_append_drop, List.take_append_drop]
 
--- Question: Languages use Sets, should we use them, or just do exist n?
 theorem DFAO.transFrom_of_pow {dfao : DFAO α state out} {x y : List α} {s : state} (hx : dfao.transFrom x s = s)
     (hy : y ∈ ({x} : Language α)∗) : dfao.transFrom y s = s := by
   rw [Language.mem_kstar] at hy

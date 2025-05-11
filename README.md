@@ -1,14 +1,5 @@
-# This project attempts to formalize and verify automata (and operations on them) for computational purposes in Lean.
-ITP project 1 (Completed in Equality.lean) : Prove the correctness of the equality checking automation for natural numbers in base b (eqBase b): 
-m = n ↔ (eqBase b).eval (inputToBase b hb [m, n])
+# This project attempts to formalize and verify automata for decision procedures in Lean.
 
-ITP project 2 : 
-1. Equality.lean: Generalized and simplified proofs for arbitrary letter length
-2. Fin.lean: Implemented common Fin operations for inserting and removing elements from a Fin vector. Proved important insert_remove and remove_insert lemmas
-3. Replicate.lean: Definitions and theorems for List.replicate and append.
-4. Pumping.lean: Pumping lemmas for DFAO, DFA, and NFA.
-5. LeadingZeros.lean: Deal with leading zero issues for automata: defined properties respectZero and acceptZero for DFA and NFA, proved lemmas, and that the equality automation respects zero. Bounded acceptance theorem for DFAO, DFA, and NFA are proven from the pumping lemmas, which are crucial to fix leading zero issues for projection
-6. NFA.lean: Important transList_subList and transFrom_subList theorems
-7. Projection.lean: ListND type to synthesizing Finset state for the NFA pumping lemma. Proved that projection behaves as expected on general inputs (projection_transFrom, projection_evalFrom, projection_eval)
-8. Collapse.lean: Implemented the collapse operation to simplify automata and make projection easier. Proved that it behaves as expected on general inputs (collapse_transFrom, collapse_evalFrom, collapse_eval). Moreover, proved that it is correct for natural number inputs.
-9. Minor reorganization in Input.lean and Boolean.lean.
+Automata-theoretic decision procedures date back to Büchi's work, leveraging finite automata to decide sentences in weak theories of arithmetic. An extension of the original procedure by adding automatic sequences are now implemented in the Walnut software to check and discover theorems in combinatorics and number theory. However, automata-based decision procedures do not generate efficiently checkable correctness guarantees as they run, raising concerns regarding the reliability and trustworthiness of the results they produce.
+
+Towards addressing this issue, we are building an automata library in Lean, which is both a proof assistant and a programming language. By formalizing executable automata and proving their properties, we provide a foundation of a trusted decision procedure for automatic sequence. They can also be used for decision procedures for Presburger arithmetic and Büchi's WS1S.

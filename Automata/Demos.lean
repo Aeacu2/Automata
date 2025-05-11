@@ -1,10 +1,9 @@
 import Mathlib.Tactic
-import Automata.Equality_new
+import Automata.Equality
 import Automata.Addition
-import Automata.Projection_new
+import Automata.Projection
 import Automata.Boolean
 import Automata.ThueMorse
-import Automata.Collapse
 
 theorem zero_is_zero : 0 = 0 := by
   apply (eqBase_iff_equal 0 2 (fun _ => 0) 0 1).mpr
@@ -44,6 +43,7 @@ theorem proxy : ∃ x : ℕ, ∃ y, x = y := by
   have : ∀ x, ((∃ y, (eqBase 0 2 0 1).eval (toWord ![x, y] 0)) ↔ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.eval (toWord ![x] 0)) := by
     intro x
     have := project_iff ![x] 1 (eqBase 0 2 0 1) ?_
+    sorry
     sorry
   sorry
 

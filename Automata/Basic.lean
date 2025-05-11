@@ -3,7 +3,7 @@ def hello := "world"
 /-
 Description of Project:
 
-This project aims to formalize automatas for computational purposes in Lean. Automatas as currently formalized in Mathlib.Computability.DFA/NFA use Sets, which makes them inefficient for computing.
+This project aims to formalize automatas for decison procedures Lean. Automatas as currently formalized in Mathlib.Computability.DFA/NFA use Set and other noncomputable constructions, which makes them unsuitable for our purposes.
 
 In DFA.lean, we define DFAO -- DFA with output, and abbreviate DFAO where the output is Bool as DFA. Various theorems and operations are given, such as the pumping lemma and the product constructions.
 
