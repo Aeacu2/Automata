@@ -5,6 +5,8 @@ import Automata.Projection
 import Automata.Boolean
 import Automata.ThueMorse
 
+#eval (addBase 2 3 0 1 2).eval (toWord ![20, 2, 22] 2)
+
 theorem zero_is_zero : 0 = 0 := by
   apply (eqBase_iff_equal 0 2 (fun _ => 0) 0 1).mpr
   native_decide

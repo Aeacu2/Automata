@@ -8,7 +8,7 @@ import Automata.Replicate
 import Automata.LeadingZeros
 import Mathlib.Data.Nat.Digits
 
--- The equality checking automata for two numbers in a long list of inputs.
+-- The equality checking automata for two numbers in a long tuple of inputs.
 def eqBase (k n: ℕ) (a b : Fin n): DFA (Fin n → Fin (k+2)) (Fin 2) := {
   transition := fun f s => match s with
     | 0 => if (f a).val == f b then 0 else 1

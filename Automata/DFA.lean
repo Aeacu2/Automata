@@ -21,14 +21,14 @@ def DFAO.eval (dfao : DFAO α state out) (x : List α) : out :=
 -- A DFA is a DFAO where the output is a boolean
 abbrev DFA (α state : Type) := DFAO α state Bool
 
-def DFAO.toDFA (dfao : DFAO α state out) (o: out) [BEq out]: DFA α state := {
+def DFAO.toDFA (dfao : DFAO α state out) (o: out) [DecidableEq out]: DFA α state := {
   transition := dfao.transition,
   start := dfao.start,
   output := fun s => (dfao.output s) == o
 }
 
-def DFAO.toDFA_evalFrom (dfao : DFAO α state out)
-  (o: out) (s : List α) (q : state) [BEq out] :
+theorem DFAO.toDFA_evalFrom (dfao : DFAO α state out)
+  (o: out) (s : List α) (q : state) [DecidableEq out] :
     (dfao.toDFA o).evalFrom s q = ((dfao.evalFrom s q) == o) := by
   induction s generalizing q with
   | nil => rfl
@@ -36,7 +36,6 @@ def DFAO.toDFA_evalFrom (dfao : DFAO α state out)
     simp only [DFAO.evalFrom, DFAO.toDFA]
     exact ih (dfao.transition x q)
 
-def DFAO.toDFA_eval (dfao : DFAO α state out)
-  (o: out) (s : List α) [BEq out] :
+theorem DFAO.toDFA_eval (dfao : DFAO α state out) (o: out) (s : List α) [DecidableEq out] :
     (dfao.toDFA o).eval s = (dfao.eval s == o) := by
   exact DFAO.toDFA_evalFrom dfao o s dfao.start
