@@ -108,36 +108,24 @@ theorem all : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
     simp[this]
   simp_rw [this]
 
-  have := project_iff ![] 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA (by
+  have := project_iff ![] 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate (by
     rw[DFA.respectZero]
     intro x m
-    rw[NFA.toDFA_eval, NFA.toDFA_eval]
+    simp[DFA.negate_eval, NFA.toDFA_eval]
     have := project_fix_respectZero (eqBase 0 2 0 1)
     specialize this 1 (by exact equality_respectZero)
-    rw[this]
+    exact Bool.coe_iff_coe.mp (this x m)
   )
 
-  have rw: (∃ x, DFAO.eval (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA (toWord (Fin.insertNth 0 x ![]) 0) = true) ↔ ∃ x, (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.eval (toWord (Fin.insertNth 0 x ![]) 0) = true := by
-    simp
-    constructor
-    . intro h
-      rcases h with ⟨x, hx⟩
-      use x
-      rw[← NFA.toDFA_eval]
-      exact hx
-    . intro h
-      rcases h with ⟨x, hx⟩
-      use x
-      rw[NFA.toDFA_eval]
-      exact hx
-  rw [rw] at this
   have rw2 : ∀ x, (Fin.insertNth 0 x ![]) = @Matrix.vecCons ℕ 0 x ![]  := by
     intro x
     simp_all only [Nat.reduceAdd, Fin.isValue, Nat.succ_eq_add_one, Fin.insertNth_zero']
     rfl
   simp_rw [rw2] at this
 
-  sorry
+  rw[← not_iff_not] at this
+  apply this.mp
+  native_decide
 
 
 #check exists_congr
