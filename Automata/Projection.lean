@@ -9,10 +9,10 @@ import Automata.Input
 import Automata.LeadingZeros
 import Automata.Fin
 
-def project (i : Fin (n+1)) (dfa : DFA (Fin (m+1) → Fin (b+2)) state) [DecidableEq state] :
-  NFA (Fin m → Fin (b+2)) state := {
+def project (m : Fin (n+1)) (dfa : DFA (Fin (n+1) → Fin (b+2)) state) [DecidableEq state] :
+  NFA (Fin n → Fin (b+2)) state := {
   transition :=
-  fun a q => ⟨(List.map (fun (x : Fin (b+2)) => dfa.transition (Fin.insertNth i x a) q)
+  fun a q => ⟨(List.map (fun (x : Fin (b+2)) => dfa.transition (Fin.insertNth m x a) q)
     (FinEnum.toList (Fin (b+2)))).dedup, by apply List.nodup_dedup⟩
   start := ⟨[dfa.start], List.nodup_singleton dfa.start⟩
   output := dfa.output
@@ -125,12 +125,12 @@ theorem project_eval [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) s
   simp[project] at h₂
   aesop
 
-theorem project_eval_iff [DecidableEq state](dfa : DFA (Fin (m + 1) → Fin (b+2)) state) (i : Fin (m + 1)) (l : List (Fin m → Fin (b+2))) : (project i dfa).eval l ↔ ∃ (l₁ : List (Fin (m+1) → Fin (b+2))) , l = l₁.map (Fin.removeNth i) ∧ dfa.eval l₁ := by
+theorem project_eval_iff [DecidableEq state](dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (m : Fin (n + 1)) (l : List (Fin n → Fin (b+2))) : (project m dfa).eval l ↔ ∃ (l₁ : List (Fin (n+1) → Fin (b+2))) , l = l₁.map (Fin.removeNth m) ∧ dfa.eval l₁ := by
   constructor
-  . exact project_eval dfa i l
+  . exact project_eval dfa m l
   . intro h
     rcases h with ⟨l₁, h₁, h₂⟩
-    have h₃ := eval_project dfa i l₁ h₂
+    have h₃ := eval_project dfa m l₁ h₂
     aesop
 
 
