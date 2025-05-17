@@ -5,6 +5,13 @@ import Automata.Projection
 import Automata.Boolean
 import Automata.ThueMorse
 
+namespace Mathlib.Tactic
+
+open Lean Meta Elab Elab.Tactic
+
+elab "reduce!" loc?:(ppSpace Parser.Tactic.location)? : tactic =>
+  runDefEqTactic (fun _ e => reduceAll e) loc? "reduce!"
+
 -- #eval (addBase 2 3 0 1 2).eval (toWord ![20, 2, 22] 2)
 
 -- theorem zero_is_zero : 0 = 0 := by
@@ -82,6 +89,7 @@ import Automata.ThueMorse
 --   simp_rw [rw2] at this
 --   apply this.mp
 --   native_decide
+set_option maxRecDepth 5000
 
 theorem demo : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
 -- Build x = y
@@ -95,7 +103,6 @@ theorem demo : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
 -- Build ∃ y, x = y
   have : ∀ x, ((∃ y, (eqBase 0 2 0 1).eval (toWord ![x, y] 0)) ↔ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.eval (toWord ![x] 0)) := by
     intro x
-    simp_rw[NFA.toDFA_eval]
     have := project_iff ![x] 1 (eqBase 0 2 0 1) (by exact equality_respectZero)
     rw [this]
     have : ∀ x_1, (Fin.insertNth 1 x_1 ![x]) = ![x, x_1] := by
@@ -139,10 +146,15 @@ theorem demo : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
     rw[DFA.negate_eval]; simp
 -- substitute
   simp_rw[this]
+-- Check result
+  rfl'
 
 -- Check result
-  native_decide
+  -- native_decide
 
+-- set_option maxRecDepth 5000
+
+-- #reduce (proofs := true) (types := true) (DFAO.eval (project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.negate (toWord ![] 0) = true)
 
 -- #check exists_congr
 -- theorem prox : ∃ (x : ℕ), x = x := by

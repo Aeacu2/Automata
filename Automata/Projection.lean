@@ -341,7 +341,13 @@ theorem project_correct [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
   exact this
 
 theorem project_iff [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
-  (project i dfa).fixLeadingZeros.eval (toWord v b) ↔ (∃ (x : ℕ), dfa.eval (toWord (Fin.insertNth i x v) b)) := by
+  (project i dfa).fixLeadingZeros.toDFA.eval (toWord v b) ↔ (∃ (x : ℕ), dfa.eval (toWord (Fin.insertNth i x v) b)) := by
   constructor
-  . exact fun a ↦ project_correct v i dfa hres a
-  . exact fun a ↦ correct_project v i dfa hres a
+  . intro h
+    apply project_correct
+    . exact hres
+    . rw[← NFA.toDFA_eval]
+      exact h
+  . intro h
+    have := correct_project v i dfa hres h
+    rwa [NFA.toDFA_eval]

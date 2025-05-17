@@ -1,17 +1,17 @@
 import Mathlib.Tactic
 
-#check Fin.succ
-#check Fin.castSucc
-#check Fin.succAbove
-#check Fin.pred
-#check Fin.castPred
-#check Fin.predAbove
-#check Fin.succAboveCases
-#check Fin.removeNth
+-- #check Fin.succ
+-- #check Fin.castSucc
+-- #check Fin.succAbove
+-- #check Fin.pred
+-- #check Fin.castPred
+-- #check Fin.predAbove
+-- #check Fin.succAboveCases
+-- #check Fin.removeNth
 
 variable {α : Type} {n : ℕ}
 
-#check Fin.succAboveCases (α := (fun _ => α)) (n := n)
+-- #check Fin.succAboveCases (α := (fun _ => α)) (n := n)
 
 def remove_index' (i : Fin (n + 1)) (f: Fin (n + 1) → α) (j : Fin n) : α  := f (Fin.succAbove i j)
 
@@ -21,7 +21,7 @@ def Fin.insert' (i : Fin (n + 1)) (a : α) (f : Fin n → α) (j : Fin (n + 1)) 
 
 def Fin.insert := @Fin.insertNth
 
-#check Fin.insertNth
+-- #check Fin.insertNth
 
 section
 
