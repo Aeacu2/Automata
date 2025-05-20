@@ -1,16 +1,69 @@
 import Mathlib.Tactic
 import Automata.Equality
-import Automata.Addition
 import Automata.Projection
 import Automata.Boolean
-import Automata.ThueMorse
 
-namespace Mathlib.Tactic
+set_option maxRecDepth 5000
 
-open Lean Meta Elab Elab.Tactic
+theorem demo : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
+-- Build x = y
+  have : ∀ x y : ℕ, x = y ↔ (eqBase 0 2 0 1).eval (toWord ![x, y] 0 ) := by
+    intro x y
+    have := eqBase_iff_equal 0 2 ![x, y] 0 1
+    exact this
+-- substitute
+  simp_rw [this]
 
-elab "reduce!" loc?:(ppSpace Parser.Tactic.location)? : tactic =>
-  runDefEqTactic (fun _ e => reduceAll e) loc? "reduce!"
+-- Build ∃ y, x = y
+  have : ∀ x, ((∃ y, (eqBase 0 2 0 1).eval (toWord ![x, y] 0)) ↔ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.eval (toWord ![x] 0)) := by
+    intro x
+    have := project_iff ![x] 1 (eqBase 0 2 0 1) (by exact equality_respectZero)
+    rw [this]
+    have : ∀ x_1, (Fin.insertNth 1 x_1 ![x]) = ![x, x_1] := by
+      intro x_1
+      exact List.ofFn_inj.mp rfl
+    simp_rw [this]
+-- substitute
+  simp_rw [this]
+
+-- Build ¬ ∃ y, x = y
+  have : ∀ x, ((¬ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.eval (toWord ![x] 0) = true) ↔ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate.eval (toWord ![x] 0) = true) := by
+    intro x
+    rw[DFA.negate_eval]
+    simp only [Nat.reduceAdd, Fin.isValue, Nat.succ_eq_add_one, Bool.not_eq_true,
+      Bool.not_eq_eq_eq_not, Bool.not_true]
+-- substitute
+  simp_rw [this]
+
+--Build ∃ x, ¬ ∃ y, x = y
+  have : (∃ x, DFAO.eval (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate (toWord ![x] 0) = true) ↔ ((project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.eval (toWord ![] 0) = true) := by
+      have := project_iff ![] 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate (by
+        rw[DFA.respectZero]
+        intro x m
+        simp[DFA.negate_eval, NFA.toDFA_eval]
+        have := project_fix_respectZero (eqBase 0 2 0 1)
+        specialize this 1 (by exact equality_respectZero)
+        exact Bool.coe_iff_coe.mp (this x m)
+      )
+      have rw2 : ∀ x, (Fin.insertNth 0 x ![]) = @Matrix.vecCons ℕ 0 x ![]  := by
+        intro x
+        simp_all only [Nat.reduceAdd, Fin.isValue, Nat.succ_eq_add_one, Fin.insertNth_zero']
+        rfl
+      simp_rw [rw2] at this
+      rw[← this, NFA.toDFA_eval]
+-- substitute
+  simp_rw[this]
+
+-- Finally, build ¬ ∃ x, ¬ ∃ y, x = y
+  have : ¬ (project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.eval (toWord ![] 0) =
+    true ↔ (project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.negate.eval (toWord ![] 0) = true := by
+    rw[DFA.negate_eval]; simp
+-- substitute
+  simp_rw[this]
+-- Check result
+  rfl'
+-- Check result
+  -- native_decide
 
 -- #eval (addBase 2 3 0 1 2).eval (toWord ![20, 2, 22] 2)
 
@@ -89,72 +142,6 @@ elab "reduce!" loc?:(ppSpace Parser.Tactic.location)? : tactic =>
 --   simp_rw [rw2] at this
 --   apply this.mp
 --   native_decide
-set_option maxRecDepth 5000
-
-theorem demo : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
--- Build x = y
-  have : ∀ x y : ℕ, x = y ↔ (eqBase 0 2 0 1).eval (toWord ![x, y] 0 ) := by
-    intro x y
-    have := eqBase_iff_equal 0 2 ![x, y] 0 1
-    exact this
--- substitute
-  simp_rw [this]
-
--- Build ∃ y, x = y
-  have : ∀ x, ((∃ y, (eqBase 0 2 0 1).eval (toWord ![x, y] 0)) ↔ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.eval (toWord ![x] 0)) := by
-    intro x
-    have := project_iff ![x] 1 (eqBase 0 2 0 1) (by exact equality_respectZero)
-    rw [this]
-    have : ∀ x_1, (Fin.insertNth 1 x_1 ![x]) = ![x, x_1] := by
-      intro x_1
-      exact List.ofFn_inj.mp rfl
-    simp_rw [this]
--- substitute
-  simp_rw [this]
-
--- Build ¬ ∃ y, x = y
-  have : ∀ x, ((¬ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.eval (toWord ![x] 0) = true) ↔ (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate.eval (toWord ![x] 0) = true) := by
-    intro x
-    rw[DFA.negate_eval]
-    simp only [Nat.reduceAdd, Fin.isValue, Nat.succ_eq_add_one, Bool.not_eq_true,
-      Bool.not_eq_eq_eq_not, Bool.not_true]
--- substitute
-  simp_rw [this]
-
---Build ∃ x, ¬ ∃ y, x = y
-  have : (∃ x, DFAO.eval (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate (toWord ![x] 0) = true) ↔ ((project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.eval (toWord ![] 0) = true) := by
-      have := project_iff ![] 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate (by
-        rw[DFA.respectZero]
-        intro x m
-        simp[DFA.negate_eval, NFA.toDFA_eval]
-        have := project_fix_respectZero (eqBase 0 2 0 1)
-        specialize this 1 (by exact equality_respectZero)
-        exact Bool.coe_iff_coe.mp (this x m)
-      )
-      have rw2 : ∀ x, (Fin.insertNth 0 x ![]) = @Matrix.vecCons ℕ 0 x ![]  := by
-        intro x
-        simp_all only [Nat.reduceAdd, Fin.isValue, Nat.succ_eq_add_one, Fin.insertNth_zero']
-        rfl
-      simp_rw [rw2] at this
-      rw[← this, NFA.toDFA_eval]
--- substitute
-  simp_rw[this]
-
--- Finally, build ¬ ∃ x, ¬ ∃ y, x = y
-  have : ¬ (project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.eval (toWord ![] 0) =
-    true ↔ (project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.negate.eval (toWord ![] 0) = true := by
-    rw[DFA.negate_eval]; simp
--- substitute
-  simp_rw[this]
--- Check result
-  rfl'
-
--- Check result
-  -- native_decide
-
--- set_option maxRecDepth 5000
-
--- #reduce (proofs := true) (types := true) (DFAO.eval (project 0 (project 1 (eqBase 0 2 0 1)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.negate (toWord ![] 0) = true)
 
 -- #check exists_congr
 -- theorem prox : ∃ (x : ℕ), x = x := by
