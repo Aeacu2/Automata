@@ -3,58 +3,126 @@ import Automata.Equality
 import Automata.Projection_new
 import Automata.Boolean
 
-set_option maxRecDepth 5000
+-- #eval DFAO.eval
+--     (project
+--             (project
+--                   ((eqBase 0 2 1 0).negate.intersection
+--                     (eqBase 0 2 1 0))).fixLeadingZeros.toDFA).fixLeadingZeros.toDFA.negate
+--     (toWord ![] 0)
 
-theorem demo : ¬ ∃ x : ℕ, ¬ ∃ y, x = y := by
+-- ∀ x, ∀ y, x = y ∨ x ≠ y
+theorem demo_fail : ¬ ∃ x : ℕ, ∃ y, ¬ (x = y) ∧ x = y := by
 -- Build x = y
   have : ∀ x y : ℕ, x = y ↔ (eqBase 0 2 1 0).eval (toWord ![y, x] 0 ) := by
     intro x y
-    have := eqBase_iff_equal 0 2 ![y, x] 1 0
-    exact this
+    have := eqBase_iff 0 2 ![y, x] 1 0
+    rw[this]
+    simp_all
+-- substitute
+  simp_rw [this]
+-- Build ¬ (x = y)
+  have : ∀ x y, ¬ (eqBase 0 2 1 0).eval (toWord ![y, x] 0) = true ↔ (eqBase 0 2 1 0).negate.eval (toWord ![y, x] 0) = true := by
+    intro x y
+    have := negate_iff (eqBase 0 2 1 0) (toWord ![y, x] 0)
+    rw[this]
+-- substitute
+  simp_rw [this]
+-- Build ¬ (x = y) ∧ x = y
+  have : ∀ x y, ((eqBase 0 2 1 0).negate.eval (toWord ![y, x] 0) = true ∧ (eqBase 0 2 1 0).eval (toWord ![y, x] 0) = true) ↔ ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0)).eval (toWord ![y, x] 0) = true  := by
+    intro x y
+    have := intersection_iff (eqBase 0 2 1 0).negate (eqBase 0 2 1 0) (toWord ![y, x] 0)
+    rw[this]
+-- substitute
+  simp_rw [this]
+
+-- Build ∃ y, ¬ (x = y) ∧ x = y
+  have : ∀ x, ((∃ y, ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0)).eval (toWord ![y, x] 0)) ↔ (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA.eval (toWord ![x] 0)) := by
+    intro x
+    have := project_iff ![x] ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0)) (by
+      apply DFA.intersection_respectZero
+      . apply DFA.negate_respectZero
+        exact equality_respectZero
+      . exact equality_respectZero
+    )
+    rw[this]
+-- substitute
+  simp_rw [this]
+
+-- Build ∃ x, ∃ y, ¬ (x = y) ∧ x = y
+  have : (∃ x, (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA.eval (toWord ![x] 0) = true) ↔ ((project (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA).fixLeadingZeros.toDFA.eval (toWord ![] 0) = true) := by
+    have := project_iff ![] (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA (by
+
+      have : ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0)).respectZero := by
+        apply DFA.intersection_respectZero
+        . apply DFA.negate_respectZero
+          exact equality_respectZero
+        . exact equality_respectZero
+      exact project_fix_toDFA_respectZero ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0)) this
+    )
+    rw[this]
+-- substitute
+  simp_rw[this]
+
+-- Build ¬ ∃ x, ∃ y, ¬ (x = y) ∧ x = y
+  have : (¬ (project (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA).fixLeadingZeros.toDFA.eval (toWord ![] 0) = true) ↔ (project (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA).fixLeadingZeros.toDFA.negate.eval (toWord ![] 0) = true := by
+    have := negate_iff ((project (project ((eqBase 0 2 1 0).negate.intersection (eqBase 0 2 1 0))).fixLeadingZeros.toDFA).fixLeadingZeros.toDFA) (toWord ![] 0)
+    rw[this]
+-- substitute
+  simp_rw[this]
+  sorry
+  --rfl'
+-- Check result
+  -- native_decide
+
+
+set_option maxRecDepth 5000
+
+-- ∀ x, ∃ y, x = y
+theorem demo : ∀ x : ℕ, ∃ y, x = y := by
+-- convert expression
+  suffices ¬ ∃ x : ℕ, ¬ ∃ y, x = y by
+    tauto
+-- Build x = y
+  have : ∀ x y : ℕ, x = y ↔ (eqBase 0 2 1 0).eval (toWord ![y, x] 0 ) := by
+    intro x y
+    rw[eqBase_iff]
+    simp_all
 -- substitute
   simp_rw [this]
 
 -- Build ∃ y, x = y
   have : ∀ x, ((∃ y, (eqBase 0 2 1 0).eval (toWord ![y, x] 0)) ↔ (project  (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.eval (toWord ![x] 0)) := by
     intro x
-    have := project_iff ![x] (eqBase 0 2 1 0) (by exact equality_respectZero)
-    rw [this]
+    rw[project_iff]
+    exact equality_respectZero
 -- substitute
   simp_rw [this]
 
 -- Build ¬ ∃ y, x = y
   have : ∀ x, ((¬ (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.eval (toWord ![x] 0) = true) ↔ (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.negate.eval (toWord ![x] 0) = true) := by
     intro x
-    rw[DFA.negate_eval]
-    simp only [Nat.reduceAdd, Fin.isValue, Nat.succ_eq_add_one, Bool.not_eq_true,
-      Bool.not_eq_eq_eq_not, Bool.not_true]
+    rw[negate_iff]
 -- substitute
   simp_rw [this]
 
 --Build ∃ x, ¬ ∃ y, x = y
   have : (∃ x, DFAO.eval (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.negate (toWord ![x] 0) = true) ↔ ((project (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.eval (toWord ![] 0) = true) := by
-      have := project_iff ![] (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.negate (by
-        rw[DFA.respectZero]
-        intro x m
-        simp[DFA.negate_eval, NFA.toDFA_eval]
-        have := project_fix_respectZero (eqBase 0 2 1 0)
-        specialize this (by exact equality_respectZero)
-        exact Bool.coe_iff_coe.mp (this x m)
-      )
-      rw[← this, NFA.toDFA_eval]
+      rw[project_iff]
+      apply DFA.negate_respectZero
+      apply project_fix_toDFA_respectZero
+      exact equality_respectZero
 -- substitute
   simp_rw[this]
 
 -- Finally, build ¬ ∃ x, ¬ ∃ y, x = y
   have : ¬ (project (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.eval (toWord ![] 0) =
     true ↔ (project (project (eqBase 0 2 1 0)).fixLeadingZeros.toDFA.negate).fixLeadingZeros.toDFA.negate.eval (toWord ![] 0) = true := by
-    rw[DFA.negate_eval]; simp
+    rw[negate_iff]
 -- substitute
   simp_rw[this]
 -- Check result
   rfl'
--- Check result
-  -- native_decide
+
 
 -- #eval (addBase 2 3 0 1 2).eval (toWord ![20, 2, 22] 2)
 

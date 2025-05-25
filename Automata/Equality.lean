@@ -9,9 +9,9 @@ import Automata.LeadingZeros
 import Mathlib.Data.Nat.Digits
 
 -- The equality checking automata for two numbers in a long tuple of inputs.
-def eqBase (k n: ℕ) (a b : Fin n): DFA (Fin n → Fin (k+2)) (Fin 2) := {
-  transition := fun f s => match s with
-    | 0 => if (f a).val == f b then 0 else 1
+def eqBase (b m: ℕ) (i j : Fin m): DFA (Fin m → Fin (b + 2)) (Fin 2) := {
+  transition := fun v s => match s with
+    | 0 => if (v i).val == v j then 0 else 1
     | 1 => 1
   start := 0
   output := fun x => x == 0
@@ -324,15 +324,15 @@ theorem eqInput_iff_equal (input : Fin l → ℕ) (m n : Fin l) :
     . apply eqInput_if_equal
 
 -- Final theorem
-theorem eqBase_iff_equal (b l: ℕ) (input : Fin l → ℕ) (m n : Fin l):
-  input m = input n ↔ (eqBase b l m n).eval (toWord input b) := by
+    theorem eqBase_iff (b m: ℕ) (v : Fin m → ℕ) (i j : Fin m):
+  (eqBase b m i j).eval (toWord v b) ↔ v i = v j  := by
   constructor
   . intro h
-    refine (eqBase_iff_eqInput b (toWord input b)).mpr ?_
-    exact fun f a ↦ eqInput_if_equal input m n h f a
-  . intro h
     rw[← eqInput_iff_equal]
-    exact fun f a ↦ eqInput_if_eqBase (toWord input b) h f a
+    exact fun f a ↦ eqInput_if_eqBase (toWord v b) h f a
+  . intro h
+    refine (eqBase_iff_eqInput b (toWord v b)).mpr ?_
+    exact fun f a ↦ eqInput_if_equal v i j h f a
 
 
 theorem equality_respectZero : (eqBase b l m n).respectZero := by

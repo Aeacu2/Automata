@@ -41,6 +41,10 @@ theorem DFA.negate_eval (dfa : DFA α state) (s : List α) :
   (dfa.negate).eval s = ! dfa.eval s := by
   exact DFA.negate_evalFrom dfa s dfa.start
 
+theorem negate_iff (dfa : DFA α state) (s : List α) :
+  (dfa.negate).eval s = true ↔ ¬ dfa.eval s = true := by
+  simp only [DFA.negate_eval, Bool.not_eq_eq_eq_not, Bool.not_true, Bool.not_eq_true]
+
 theorem DFA.intersection_output (dfa1 : DFA α state1) (dfa2 : DFA α state2) (q1 : state1) (q2 : state2) :
   (dfa1.intersection dfa2).output (q1, q2) = (dfa1.output q1 && dfa2.output q2) := by rfl
 
@@ -62,6 +66,10 @@ theorem DFA.intersection_eval (dfa1 : DFA α state1) (dfa2 : DFA α state2)
   (s : List α) : (dfa1.intersection dfa2).eval s = (dfa1.eval s && dfa2.eval s) := by
   exact DFA.intersection_evalFrom dfa1 dfa2 s dfa1.start dfa2.start
 
+theorem intersection_iff (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) :
+  (dfa1.intersection dfa2).eval s = true ↔ (dfa1.eval s = true ∧ dfa2.eval s = true) := by
+  simp only [DFA.intersection_eval, Bool.and_eq_true]
+
 theorem DFA.union_output (dfa1 : DFA α state1) (dfa2 : DFA α state2) (q1 : state1) (q2 : state2) :
   (dfa1.union dfa2).output (q1, q2) = (dfa1.output q1 || dfa2.output q2) := by rfl
 
@@ -82,3 +90,7 @@ theorem DFA.union_evalFrom (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : Li
 theorem DFA.union_eval (dfa1 : DFA α state1) (dfa2 : DFA α state2)
   (s : List α) : (dfa1.union dfa2).eval s = (dfa1.eval s || dfa2.eval s) := by
   exact DFA.union_evalFrom dfa1 dfa2 s dfa1.start dfa2.start
+
+theorem union_iff (dfa1 : DFA α state1) (dfa2 : DFA α state2) (s : List α) :
+  (dfa1.union dfa2).eval s = true ↔ (dfa1.eval s = true ∨ dfa2.eval s = true) := by
+  simp only [DFA.union_eval, Bool.or_eq_true]

@@ -33,20 +33,20 @@ def DFA.respectZero (dfa : DFA (Fin n → Fin (b+2)) state) : Prop := ∀ (x : L
 
 def NFA.respectZero [DecidableEq state] (nfa : NFA (Fin n → Fin (b+2)) state) : Prop := ∀ (x : List (Fin n → Fin (b+2))), ∀ m, nfa.eval x ↔ nfa.eval (padZeros m x)
 
-theorem DFA.negate_respectZero (dfa : DFA (Fin n → Fin (b+2)) state) (h: dfa.respectZero) : dfa.negate.respectZero := by
+theorem DFA.negate_respectZero (dfa : DFA (Fin n → Fin (b + 2)) state) (h: dfa.respectZero) : dfa.negate.respectZero := by
   rw[DFA.respectZero] at *
   intro x m
   specialize h x m
   simp_all only [Bool.coe_iff_coe, negate_eval, Bool.not_eq_true']
 
-theorem DFA.union_respectZero (dfa1 : DFA (Fin n → Fin (b+2)) state1) (dfa2 : DFA (Fin n → Fin (b+2)) state2) (h1: dfa1.respectZero) (h2: dfa2.respectZero) : (dfa1.union dfa2).respectZero := by
+theorem DFA.union_respectZero (dfa1 : DFA (Fin m → Fin (b + 2)) state1) (dfa2 : DFA (Fin m → Fin (b + 2)) state2) (h1: dfa1.respectZero) (h2: dfa2.respectZero) : (dfa1.union dfa2).respectZero := by
   rw[DFA.respectZero] at *
   intro x m
   specialize h1 x m
   specialize h2 x m
   simp_all only [Bool.coe_iff_coe, union_eval, Bool.or_eq_true]
 
-theorem DFA.intersection_respectZero (dfa1 : DFA (Fin n → Fin (b+2)) state1) (dfa2 : DFA (Fin n → Fin (b+2)) state2) (h1: dfa1.respectZero) (h2: dfa2.respectZero) : (dfa1.intersection dfa2).respectZero := by
+theorem DFA.intersection_respectZero (dfa1 : DFA (Fin m → Fin (b + 2)) state1) (dfa2 : DFA (Fin m → Fin (b + 2)) state2) (h1: dfa1.respectZero) (h2: dfa2.respectZero) : (dfa1.intersection dfa2).respectZero := by
   rw[DFA.respectZero] at *
   intro x m
   specialize h1 x m

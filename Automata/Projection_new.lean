@@ -185,6 +185,12 @@ theorem project_fix_respectZero [Fintype state][DecidableEq state] (dfa : DFA (F
     . use (Fintype.card (ListND state) + k)
     . exact h'
 
+theorem project_fix_toDFA_respectZero [Fintype state][DecidableEq state] (dfa : DFA (Fin (n + 1) → Fin (b+2)) state) (h: dfa.respectZero) : (project dfa).fixLeadingZeros.toDFA.respectZero := by
+  have := project_fix_respectZero dfa h
+  intro v m
+  rw[NFA.toDFA_eval, NFA.toDFA_eval]
+  exact this v m
+
 theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (hls : ∀ i, (ls i).length = l) (hlb: ∀ i, ∀ x ∈ ls i, x < b+2) : (List.map (fun f ↦ Matrix.vecTail f) (zip ls hlb hls)) = zip (Matrix.vecTail (ls)) (by
     intro j x hx
     simp only [Matrix.vecTail, Nat.succ_eq_add_one, Function.comp_apply] at hx

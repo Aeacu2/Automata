@@ -340,7 +340,7 @@ theorem project_correct [Fintype state] [DecidableEq state] (v : Fin l → ℕ) 
   simp_rw[h₁]
   exact this
 
-theorem project_iff [Fintype state] [DecidableEq state] (v : Fin l → ℕ) (i : Fin (l + 1)) (dfa : DFA (Fin (l+1) → Fin (b+2)) state) (hres: dfa.respectZero):
+theorem project_iff [Fintype state] [DecidableEq state] (v : Fin m → ℕ) (i : Fin (m + 1)) (dfa : DFA (Fin (m + 1) → Fin (b + 2)) state) (hres: dfa.respectZero):
   (project i dfa).fixLeadingZeros.toDFA.eval (toWord v b) ↔ (∃ (x : ℕ), dfa.eval (toWord (Fin.insertNth i x v) b)) := by
   constructor
   . intro h

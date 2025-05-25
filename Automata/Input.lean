@@ -25,8 +25,6 @@ Theorems involved: addZeroes_elem, addZeroesLength, stretchLen_length, stretchLe
 
 Step 3: Zip the lists together, giving less than base proofs to turn Nats into Fin bs, to get the input to automatas: List (Fin (l.length) → Fin b)
 
-Functions involved: zipToAlphabetFin
-Theorems involved: zipTailHlb, zipTailHlss, zipTailHls, zipToAlphabetFin_length
 -/
 
 def toBase (b : ℕ) (n : ℕ): List ℕ :=
@@ -452,8 +450,8 @@ def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hl
 
 theorem zip_cons (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l + 1) :
   zip ls hlb hls = (fun i => ⟨(ls i)[0]'(by specialize hls i; omega), by apply hlb; exact List.getElem_mem (by rw[hls]; omega)⟩) :: zip (fun i => (ls i).tail)
-    (by apply zipTailHlb; exact hlb)
-    (by apply zipTailHls; exact hls) := by
+    (zipTailHlb _ hlb)
+    (zipTailHls _ hls) := by
   simp[zip]
 
 theorem zip_nil (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = 0) :
@@ -483,13 +481,8 @@ theorem padZeros_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x <
     exact ih
 
 def toWord (v: Fin m → ℕ) (b: ℕ) : List (Fin m → Fin (b + 2)) :=
-  zip (stretchLen (mapToBase (b + 2) v)) (by
-    apply stretchLen_of_mapToBase_lt_base
-    omega
-  ) (by
-    intro i
-    apply stretchLen_uniform
-  )
+  zip (stretchLen (mapToBase (b + 2) v)) (stretchLen_of_mapToBase_lt_base
+    _ _ (by omega)) (fun i => stretchLen_uniform _ _)
 
 /-- Hello, Aeacus! -/
 def getDigits {b : ℕ} (ls : List (Fin m → Fin (b + 2))) : Fin m → List ℕ :=
