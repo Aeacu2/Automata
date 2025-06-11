@@ -204,7 +204,7 @@ theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (hls : ∀ i, 
   .
     have : ls = fun j ↦ [] := by
       funext j
-      exact List.length_eq_zero.mp (hls j)
+      exact List.length_eq_zero_iff.mp (hls j)
     simp_all only [Fin.removeNth, zip_nil, List.map_nil]
   . simp only [Nat.succ_eq_add_one, zip, List.map_cons, List.cons.injEq]
     constructor
@@ -230,10 +230,8 @@ theorem word_project_aux (x b : ℕ) (v : Fin m → ℕ)  : (List.map (fun f ↦
     intro i
     apply stretchLen_uniform
   ):= by
-  simp[toWord]
-  exact
-    word_project_aux' b (stretchLen (mapToBase (b + 2) (Matrix.vecCons x v)))
-      (toWord.proof_2 (Matrix.vecCons x v) b) (toWord.proof_1 (Matrix.vecCons x v) b)
+  simp only [toWord]
+  apply word_project_aux'
 
 theorem maxLenFin_cons (x b : ℕ)  (v : Fin m → ℕ): maxLenFin (mapToBase (b + 2) v) ≤ maxLenFin (mapToBase (b + 2) (Matrix.vecCons x v)) := by
   apply maxLenFin_le
@@ -241,8 +239,9 @@ theorem maxLenFin_cons (x b : ℕ)  (v : Fin m → ℕ): maxLenFin (mapToBase (b
   rw[maxLenFin]
   apply len_le_maxLen
   simp only [List.mem_ofFn, mapToBase]
-  use j + 1
-  simp only [Nat.succ_eq_add_one, Fin.coe_eq_castSucc, Fin.coeSucc_eq_succ, Matrix.cons_val_succ]
+  use ⟨j+1, by omega⟩
+  simp
+
 
 theorem word_project (x b : ℕ)  (v : Fin m → ℕ) : ∃ k, (List.map (fun f ↦ Matrix.vecTail f) (toWord (Matrix.vecCons x v) b)) = padZeros k (toWord v b) := by
   use maxLenFin (mapToBase (b + 2) (Matrix.vecCons x v)) - maxLenFin (mapToBase (b + 2) v)

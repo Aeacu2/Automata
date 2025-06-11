@@ -34,7 +34,7 @@ theorem DFAO.transFrom_split [Fintype state] {dfao : DFAO α state out} {x : Lis
     Fintype.exists_ne_map_eq_of_card_lt
       (fun n : Fin (Fintype.card state + 1) => dfao.transFrom (x.take n) s) (by norm_num)
   wlog hle : (n : ℕ) ≤ m generalizing n m
-  · exact this m n hneq.symm heq.symm (le_of_not_le hle)
+  · exact this m n hneq.symm heq.symm (le_of_not_ge hle)
   have hm : (m : ℕ) ≤ Fintype.card state := Fin.is_le m
   refine
     ⟨dfao.transFrom ((x.take m).take n) s, (x.take m).take n, (x.take m).drop n,
@@ -65,7 +65,7 @@ theorem DFAO.transFrom_of_pow {dfao : DFAO α state out} {x y : List α} {s : st
   rcases hy with ⟨S, rfl, hS⟩
   induction' S with a S ih
   · rfl
-  · have ha := hS a (List.mem_cons_self _ _)
+  · have ha := hS a List.mem_cons_self
     rw [Set.mem_singleton_iff] at ha
     rw [List.flatten, DFAO.transFrom_of_append, ha, hx]
     apply ih

@@ -101,8 +101,8 @@ theorem toBase_ofBase' (b: ℕ) (l: List ℕ) (hb: 1 < b) (hlb : ∀ x ∈ l, x 
     simp[List.getLast]
     suffices : ¬ l[0] = 0
     . convert this
-      apply List.head_eq_getElem l
-    exact Nat.not_eq_zero_of_lt hlead
+      apply List.head_eq_getElem
+    exact Nat.ne_zero_of_lt hlead
   )
   rw[toBase, ofBase]
   rw[Nat.ofDigits_eq_foldr] at this
@@ -366,14 +366,13 @@ def maxLenFin (v: (Fin m → List ℕ)) : ℕ :=
 theorem len_le_maxLenFin (v: (Fin m → List ℕ)) (i: Fin m) :
   (v i).length ≤ maxLenFin v := by
   apply len_le_maxLen
-  refine (List.mem_ofFn v (v i)).mpr ?_
-  exact Set.mem_range_self i
+  simp_all only [List.mem_ofFn, exists_apply_eq_apply]
 
 theorem maxLenFin_exist (v: (Fin m → List ℕ)) (hm: m > 0) :
   ∃ i, (v i).length = maxLenFin v := by
   have := maxLen_exist (List.ofFn v) (by simp; omega)
   rcases this with ⟨x, hx, hlen⟩
-  have := (List.mem_ofFn v x).mp hx
+  have := List.mem_ofFn.mp hx
   rcases this with ⟨i, hi⟩
   use i
   rw[hi, ← hlen, maxLenFin]
@@ -432,9 +431,7 @@ theorem zipTailHlb (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < b
 theorem zipTailHls (ls: Fin m → (List ℕ)) (hls : ∀ i, (ls i).length = l + 1) :
   ∀ i, (ls i).tail.length = l := by
   intro i
-  have h := List.length_tail (ls i)
-  rw[hls] at h
-  exact h
+  simp_all only [List.length_tail, add_tsub_cancel_right]
 
 def zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i, x < (b + 2)) (hls : ∀ i, (ls i).length = l) : List (Fin m → Fin (b + 2))  :=
   match l with
@@ -538,7 +535,7 @@ theorem getDigits_of_zip (ls: Fin m → (List ℕ)) (hlb: ∀ i, ∀ x ∈ ls i,
     simp only [zip]
     funext i
     rw[getDigits_of_nil]
-    simp_all only [List.length_eq_zero]
+    simp_all only [List.length_eq_zero_iff]
   | succ l ih =>
     exact getDigits_of_zip' ls hlb hls
 

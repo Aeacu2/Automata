@@ -194,7 +194,7 @@ theorem word_project_aux' (b : ℕ) (ls : Fin (m+1) → List ℕ) (i : Fin (m + 
   .
     have : ls = fun j ↦ [] := by
       funext j
-      exact List.length_eq_zero.mp (hls j)
+      exact List.length_eq_zero_iff.mp (hls j)
     simp_all only [Fin.removeNth, zip_nil, List.map_nil]
   . simp[zip]
     constructor
@@ -221,9 +221,7 @@ theorem word_project_aux (x b : ℕ) (v : Fin m → ℕ) (i : Fin (m + 1)) : (Li
     apply stretchLen_uniform
   ):= by
   simp[toWord]
-  exact
-    word_project_aux' b (stretchLen (mapToBase (b + 2) (Fin.insertNth i x v))) i
-      (toWord.proof_2 (Fin.insertNth i x v) b) (toWord.proof_1 (Fin.insertNth i x v) b)
+  apply word_project_aux'
 
 theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : maxLenFin (mapToBase (b + 2) v) ≤ maxLenFin (mapToBase (b + 2) (Fin.insertNth i x v)) := by
   apply maxLenFin_le
@@ -232,7 +230,7 @@ theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : m
   apply len_le_maxLen
   simp only [List.mem_ofFn, mapToBase]
   by_cases h: j.val < i.val
-  . use j
+  . use ⟨j, by omega⟩
     congr
     simp only [Fin.insertNth, Fin.insert, Fin.insertNth, Fin.succAboveCases, Fin.coe_eq_castSucc,
       Fin.castSucc, Fin.castAdd, Fin.castLE, eq_rec_constant, Fin.is_lt, Fin.castPred_mk, Fin.eta]
@@ -250,8 +248,7 @@ theorem maxLenFin_recover (x b : ℕ)  (v : Fin m → ℕ) (i : Fin (m + 1)) : m
   . use ⟨j.val + 1, by omega⟩
     simp only [not_lt] at h
     congr
-    simp only [Fin.insertNth, Fin.insert, Fin.insertNth, Fin.succAboveCases, Int.reduceNeg, id_eq,
-      Int.Nat.cast_ofNat_Int, eq_rec_constant]
+    simp only [Fin.insertNth, Fin.succAboveCases, eq_rec_constant]
     split
     . rename_i h'
       have: j.val + 1 = i.val := by

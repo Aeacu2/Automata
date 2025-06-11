@@ -166,13 +166,13 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: Fin l → (List ℕ)) (k p: Fin l
   have kLen: (L k).length ≤ n := by
     trans maxLenFin L
     apply len_le_maxLen
-    refine (List.mem_ofFn L (L k)).mpr ?_
+    refine (List.mem_ofFn).mpr ?_
     exact exists_apply_eq_apply L k
     exact hn
   have pLen : (L p).length ≤ n := by
     trans maxLenFin L
     apply len_le_maxLen
-    refine (List.mem_ofFn L (L p)).mpr ?_
+    refine (List.mem_ofFn).mpr ?_
     exact exists_apply_eq_apply L p
     exact hn
 
@@ -190,7 +190,7 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: Fin l → (List ℕ)) (k p: Fin l
         exact hLen
 
       have addk : (addZeroes (n - (L k).length) (L k))[n - (L k).length] ≠  0 := by
-        simp[addZeroes]
+        simp only [addZeroes]
         rw[List.getElem_append_right]
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hk
