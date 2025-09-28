@@ -14,10 +14,10 @@ theorem List.getElem_of_replicate_append_right (x : List α) (h : i < x.length) 
   . simp only [length_replicate, add_tsub_cancel_right]
   . simp only [length_replicate, le_add_iff_nonneg_left, zero_le]
 
-theorem List.replciate_append_elem (n: ℕ) (l: List ℕ) :
+theorem List.replicate_append_elem (n: ℕ) (l: List ℕ) :
   x ∈ ((List.replicate n a) ++ l) → x = a ∨ x ∈ l := by
   intro h
-  simp only [List.mem_append, List.replicate] at h
+  simp only [List.mem_append] at h
   rcases h with (h | h)
   . left
     have : x ∈ [a] := List.replicate_subset_singleton n a h

@@ -37,11 +37,11 @@ def recover_value' (i : Fin (n + 1)) (x : α) (f: Fin n → α) :
 
 def recover_value := @Fin.insertNth
 
-@[simp] theorem remove_insert (i : Fin (n + 1)) (f: Fin n → α) :
+theorem remove_insert (i : Fin (n + 1)) (f: Fin n → α) :
   remove_index i (Fin.insert i a f) = f := by
   ext x
   -- simp_all[remove_index, Fin.insert, Fin.succAboveCases, Fin.succAbove, Fin.removeNth]
-  simp_all only [remove_index, Fin.removeNth, Fin.insert, Fin.succAbove_cases_eq_insertNth,
+  simp_all only [remove_index, Fin.removeNth, Fin.insert,
     Fin.insertNth_apply_succAbove]
 
 
@@ -70,11 +70,11 @@ def recover_value := @Fin.insertNth
   --       omega
   --     . simp only [Fin.pred_succ]
 
-@[simp] theorem insert_remove (i : Fin (n + 1)) (a : α) (f: Fin (n + 1) → α) (hf: f i = a) :
+theorem insert_remove (i : Fin (n + 1)) (a : α) (f: Fin (n + 1) → α) (hf: f i = a) :
   Fin.insert i a (remove_index i f) = f := by
   -- rw[remove_index]
   ext x
-  simp_all[remove_index, Fin.insert, Fin.succAboveCases, Fin.succAbove, Fin.removeNth,Function.update]
+  simp_all[remove_index, Fin.insert,Function.update]
 
   -- split
   -- .

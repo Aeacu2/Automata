@@ -2,7 +2,6 @@ import Mathlib.Tactic
 import Mathlib.Data.List.Basic
 import Automata.DFA
 import Automata.NFA
-import Mathlib.Data.Nat.Digits
 
 def addBase (b m: ℕ) (i j k : Fin m): DFA (Fin m → Fin (b+2)) (Fin 3) := {
   transition := fun f s => match s with

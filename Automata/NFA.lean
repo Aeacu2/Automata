@@ -75,7 +75,7 @@ theorem NFA.toDFA_evalFrom (nfa : NFA α state) (x : List α) (qs: ListND state)
     simp_all only
     rfl
   case cons y ys ih =>
-    simp only [NFA.evalFrom, DFAO.evalFrom, NFA.toDFA_transition]
+    simp only [NFA.evalFrom, DFAO.evalFrom]
     exact ih (nfa.transList y qs)
 
 theorem NFA.toDFA_eval (nfa : NFA α state) (s : List α) [DecidableEq state]

@@ -195,9 +195,8 @@ theorem DFAO.bounded_out [Fintype state] (dfao : DFAO (Fin n → Fin (b+2)) stat
       rw[hcx, har]
       simp only [padZeros, List.length_replicate]
       rw[← List.append_assoc]
-      simp only [List.length_replicate, List.replicate_append_replicate,
-        List.append_cancel_right_eq, List.replicate_inj, AddLeftCancelMonoid.add_eq_zero,
-        List.length_eq_zero_iff, or_true, and_true]
+      simp only [List.replicate_append_replicate, List.append_cancel_right_eq, List.replicate_inj,
+        AddLeftCancelMonoid.add_eq_zero, List.length_eq_zero_iff, or_true, and_true]
       omega
 
     by_cases hkb : k - b'.length ≤ Fintype.card state

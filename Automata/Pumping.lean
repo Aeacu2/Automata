@@ -11,7 +11,7 @@ theorem DFAO.transFrom_of_append (dfao: DFAO α state out)(start : state) (x y :
   induction x generalizing start with
   | nil => rfl
   | cons a x ih =>
-    simp only [List.append, DFAO.transFrom]
+    simp only [DFAO.transFrom]
 
     specialize ih (dfao.transition a start)
     simp[DFAO.transFrom, ih]
@@ -21,7 +21,7 @@ theorem NFA.transFrom_of_append [DecidableEq state] (nfa : NFA α state) (start 
   induction x generalizing start with
   | nil => rfl
   | cons a x ih =>
-    simp only [List.append, NFA.transFrom]
+    simp only [NFA.transFrom]
     exact ih (nfa.transList a start)
 
 theorem DFAO.transFrom_split [Fintype state] {dfao : DFAO α state out} {x : List α} {s t : state} (hlen : Fintype.card state ≤ x.length)
@@ -112,7 +112,7 @@ theorem DFAO.pumping_lemma_evalFrom [Fintype state] {dfao : DFAO α state out} {
   . intro y hy'
     specialize hy y hy'
     simp only [evalFrom] at hx
-    simp_all only [evalFrom, hy, hx]
+    simp_all only [evalFrom]
 
 
 theorem DFAO.pumping_lemma_eval [Fintype state] {dfao : DFAO α state out} {x : List α} {o : out} (hx : dfao.eval x = o)(hlen : Fintype.card state ≤ x.length) :

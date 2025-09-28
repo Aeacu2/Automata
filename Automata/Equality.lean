@@ -6,12 +6,11 @@ import Automata.Input
 import Automata.Boolean
 import Automata.Replicate
 import Automata.LeadingZeros
-import Mathlib.Data.Nat.Digits
 
 -- The equality checking automata for two numbers in a long tuple of inputs.
 def eqBase (b m: ℕ) (i j : Fin m): DFA (Fin m → Fin (b + 2)) (Fin 2) := {
   transition := fun v s => match s with
-    | 0 => if (v i).val == v j then 0 else 1
+    | 0 => if (v i).val  == v j then 0 else 1
     | 1 => 1
   start := 0
   output := fun x => x == 0
@@ -34,7 +33,7 @@ theorem eqBase_if_equal_aux (input: List (Fin n → Fin (k+2))):
     simp[eqBase, DFAO.evalFrom, DFAO.transFrom]
   case cons f fs ih =>
     have h1 := h f
-    simp only [List.mem_cons, true_or, Fin.isValue, true_implies] at h1
+    simp only [List.mem_cons, true_or, true_implies] at h1
     simp only [DFAO.evalFrom, DFAO.transFrom, Fin.isValue]
     have: ((eqBase k n a b).transition f 0) = 0 := by
       simp only [eqBase, Fin.isValue, beq_iff_eq, h1, ↓reduceIte]
@@ -56,7 +55,7 @@ theorem eqBase_transFrom_zero (state: Fin 2) (l : List (Fin n → Fin (k+2))) :
   (eqBase k n a b).transFrom l state = 0 ↔ state = 0 ∧ ∀ f ∈ l, (f a).val = f b := by
   induction l generalizing state
   case nil =>
-    simp[eqBase, DFAO.transFrom]
+    simp [DFAO.transFrom]
   case cons f fs ih =>
     simp[DFAO.transFrom]
     specialize ih ((eqBase k n a b).transition f state)
@@ -111,7 +110,7 @@ theorem eqZipOfIndexEq (lsLength : ℕ) (lss: Fin l → (List ℕ))
       case zero =>
         simp only [zip, List.not_mem_nil] at hf
       case succ lsLength ih =>
-        simp only [zip, Fin.getElem_fin, List.mem_cons] at hf
+        simp only [zip, List.mem_cons] at hf
         rcases hf with hf | hf
         . specialize hIndexEq 0 (by norm_num)
           simp[hf, hIndexEq]
@@ -129,7 +128,7 @@ theorem eqInput_if_equal (input : Fin l → ℕ) (m n : Fin l) :
 
     have stretchLenEq: (stretchLen (mapToBase (k+2) input)) m =
     (stretchLen (mapToBase (k+2) input)) n := by
-      simp_all[stretchLen, mapToBase, h]
+      simp_all [stretchLen, mapToBase]
 
     have lenStretchLen0 : ((stretchLen (mapToBase (k+2) input)) m).length = maxLenFin (mapToBase (k+2) input) := by
       apply stretchLen_uniform
@@ -162,7 +161,7 @@ theorem equal_if_mapToBaseEq (input: Fin l → ℕ) (m n : Fin l) :
 theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: Fin l → (List ℕ)) (k p: Fin l) (hn: n ≥ maxLenFin L)  (lenk :0 < (L k).length) (hk: (L k)[0] ≠ 0) (lenp :0 < (L p).length) (hp: (L p)[0] ≠ 0) :
   addZeroes (n - (L k).length) (L k) = addZeroes (n - (L p).length) (L p) → (L k) = (L p):= by
   intro h
-  simp only [maxLen, zero_le, max_eq_left, ge_iff_le, max_le_iff] at hn
+  simp only [ge_iff_le] at hn
   have kLen: (L k).length ≤ n := by
     trans maxLenFin L
     apply len_le_maxLen
@@ -195,7 +194,7 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: Fin l → (List ℕ)) (k p: Fin l
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hk
         . simp[*]
-      simp_all only [ne_eq, ge_iff_le, not_true_eq_false]
+      simp_all only [ne_eq, not_true_eq_false]
     .
       have addk : (addZeroes (n - (L k).length) (L k))[n-(L p).length] = 0 := by
         simp[addZeroes]
@@ -207,7 +206,7 @@ theorem eq_if_addZeroesEq_nonzero (n: ℕ) (L: Fin l → (List ℕ)) (k p: Fin l
         simp only [List.length_replicate, le_refl, tsub_eq_zero_of_le]
         exact hp
         . simp
-      simp_all only [ge_iff_le, ne_eq]
+      simp_all only [ne_eq]
   rw[← hL] at h
   simp only [addZeroes, List.append_cancel_left_eq] at h
   exact h
@@ -221,7 +220,7 @@ theorem contra (input : Fin l → ℕ) (m n : Fin l) (h : (stretchLen (mapToBase
   have hbm: ∀x ∈ (toBase (k+2) (input m)), x = 0 := by
     intro x hx
     apply this
-    simp only [addZeroes, le_add_iff_nonneg_left, zero_le, List.mem_append, List.mem_replicate,
+    simp only [addZeroes, List.mem_append, List.mem_replicate,
       ne_eq, List.mem_reverse]
     right
     exact List.mem_reverse.mp hx
@@ -249,20 +248,20 @@ theorem eq_if_stretchLenEq (input : Fin l → ℕ)  (m n : Fin l) :
   . by_contra; apply contra; exact h; exact hn; exact hm
   apply eq_if_addZeroesEq_nonzero (maxLenFin (mapToBase (k+2) input)) (mapToBase (k+2) input) m n
   . simp only [ge_iff_le]; rfl
-  . simp only [mapToBase, List.map_cons, List.map_nil, List.getElem_cons_zero, ne_eq]
+  . simp only [mapToBase, ne_eq]
     refine Nat.ne_zero_iff_zero_lt.mpr ?_
     apply toBase_lead_nonzero
-    simp_all only [Fin.getElem_fin, ge_iff_le, le_add_iff_nonneg_left, zero_le]
+    simp_all only [ge_iff_le, le_add_iff_nonneg_left, zero_le]
     . omega
-  . simp only [mapToBase, List.map_cons, List.map_nil, List.getElem_cons_zero, ne_eq]
+  . simp only [mapToBase, ne_eq]
     refine Nat.ne_zero_iff_zero_lt.mpr ?_
     apply toBase_lead_nonzero
-    simp_all only [Fin.getElem_fin, ge_iff_le, le_add_iff_nonneg_left, zero_le]
+    simp_all only [ge_iff_le, le_add_iff_nonneg_left, zero_le]
     . omega
   . simp_all[stretchLen]
-  . simp only [mapToBase, Fin.getElem_fin, List.getElem_map]
+  . simp only [mapToBase]
     apply toBase_len_nonzero <;> omega
-  . simp only [mapToBase, Fin.getElem_fin, List.getElem_map]
+  . simp only [mapToBase]
     apply toBase_len_nonzero <;> omega
 
 theorem indexEqOfEqZip (lsLength : ℕ) (lss: Fin l → (List ℕ))
@@ -281,8 +280,8 @@ theorem indexEqOfEqZip (lsLength : ℕ) (lss: Fin l → (List ℕ))
         case zero => intro i hi; contradiction
         case succ s ih =>
           intro i hi
-          simp [zip, Fin.getElem_fin, List.mem_cons, Fin.isValue,
-            forall_eq_or_imp, Fin.val_zero, Fin.val_one] at h
+          simp [zip, List.mem_cons,
+            forall_eq_or_imp] at h
           rcases h with ⟨h1, h2⟩
           specialize ih (fun i ↦ (lss i).tail)
           specialize ih (zipTailHlb lss hlb)
@@ -299,8 +298,7 @@ theorem indexEqOfEqZip (lsLength : ℕ) (lss: Fin l → (List ℕ))
 theorem equal_if_eqInput (input : Fin l → ℕ) (m n : Fin l) :
   (∀ f ∈ toWord input k, (f m).val = (f n)) → input m = input n := by
     intro h
-    simp only [List.length_cons, List.length_singleton, Nat.reduceAdd, toWord, Fin.zero_eta,
-      Fin.isValue, Fin.mk_one] at h
+    simp only [toWord] at h
     apply @eq_if_stretchLenEq l k input m n
     .
       have inter := indexEqOfEqZip (maxLenFin (mapToBase (k+2) input))  (stretchLen (mapToBase (k+2) input)) (stretchLen_of_mapToBase_lt_base (k+2) input (by omega)) m n (by exact fun x ↦ stretchLen_uniform (mapToBase (k + 2) input) x)
@@ -314,7 +312,7 @@ theorem equal_if_eqInput (input : Fin l → ℕ) (m n : Fin l) :
       . simp_all only
       . intro _ _ _
         apply inter
-        simp_all only [Fin.getElem_fin]
+        simp_all only
 
 -- Step 2 Complete
 theorem eqInput_iff_equal (input : Fin l → ℕ) (m n : Fin l) :
@@ -362,18 +360,14 @@ theorem equality_respectZero : (eqBase b l m n).respectZero := by
     rw[padZeros]
     rw[DFAO.eval, DFAO.evalFrom, DFAO.transFrom_of_append]
     nth_rw 1 [eqBase]
-    simp only [Fin.isValue, beq_iff_eq]
+    simp only [Fin.isValue]
     suffices: (DFAO.transFrom (eqBase b l m n) (List.replicate c fun _ ↦ 0) (eqBase b l m n).start) = 0
     . rw[this]
       simp[DFAO.eval, DFAO.evalFrom] at h
       nth_rw 1 3 [eqBase] at h
-      simp only [Fin.isValue, beq_iff_eq] at h
+      simp only [Fin.isValue] at h
       exact h
     nth_rw 2 [eqBase]
     simp only [Fin.isValue]
     apply eqBase_transFrom_zero 0 (List.replicate c fun _ ↦ 0) |>.mpr
-    simp_all only [Fin.isValue, List.mem_replicate, ne_eq, Fin.val_zero, and_imp, implies_true, and_self]
-
-
-
--- Demos
+    simp_all only [Fin.isValue, List.mem_replicate, ne_eq, Fin.val_zero, implies_true, and_self]
