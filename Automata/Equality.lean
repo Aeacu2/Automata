@@ -1,7 +1,6 @@
 import Mathlib.Tactic
 import Mathlib.Data.List.Basic
 import Automata.DFA
-import Automata.NFA
 import Automata.Input
 import Automata.Boolean
 import Automata.Replicate
